@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "out"
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../api" },
+    { "path": "../provider-lsp" },
+    { "path": "../provider-java" }
+  ]
+}

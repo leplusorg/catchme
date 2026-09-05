@@ -1,0 +1,35 @@
+{
+  "name": "@leplusorg/catchme-provider-testkit",
+  "version": "1.0.0",
+  "description": "Conformance test suite that any CatchMe exception-flow provider can run against itself.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leplusorg/catchme.git",
+    "directory": "packages/testkit"
+  },
+  "homepage": "https://leplusorg.github.io/catchme/",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@leplusorg/catchme-api": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "@types/vscode": "1.90.0",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.11"
+  }
+}

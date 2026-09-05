@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <!--
+     Registers the commands the VS Code extension invokes through
+     `java.execute.workspaceCommand`. Command ids must match those in
+     packages/provider-java/src/index.ts.
+   -->
+   <extension point="org.eclipse.jdt.ls.core.delegateCommandHandler">
+      <delegateCommandHandler class="org.leplus.catchme.jdt.CatchMeDelegateCommandHandler">
+         <command id="catchme.java.resolveThrowSite"/>
+         <command id="catchme.java.suggestExceptionTypes"/>
+         <command id="catchme.java.analyzeFlow"/>
+      </delegateCommandHandler>
+   </extension>
+</plugin>

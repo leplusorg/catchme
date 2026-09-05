@@ -1,0 +1,11 @@
+{
+  "//": "Solution-style root config: `tsc --build` walks these in dependency order.",
+  "files": [],
+  "references": [
+    { "path": "packages/api" },
+    { "path": "packages/provider-lsp" },
+    { "path": "packages/provider-java" },
+    { "path": "packages/testkit" },
+    { "path": "packages/core" }
+  ]
+}

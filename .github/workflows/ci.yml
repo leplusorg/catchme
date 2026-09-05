@@ -1,0 +1,218 @@
+---
+###########################
+## Build, lint and test  ##
+###########################
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ##############################################################
+  # TypeScript workspace: build, typecheck and unit tests.      #
+  # pnpm/action-setup must run BEFORE actions/setup-node so the #
+  # latter's `cache: pnpm` can find the pnpm binary. The pnpm   #
+  # version comes from the `packageManager` field in            #
+  # package.json, so it is not duplicated here.                 #
+  ##############################################################
+  node:
+    name: Node (build, lint, unit tests)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Typecheck / lint
+        run: pnpm run lint
+
+      # Every package, including `catchme`: its test script is a dependency-free
+      # smoke test that loads the real bundled extension against a mock host, so
+      # it needs no display and no VS Code download. The full extension-host run
+      # lives in the `integration` job below.
+      - name: Unit and smoke tests
+        run: pnpm test
+
+  #############################################################
+  # The jdt.ls analyzer bundle (Maven/Tycho).                  #
+  # Separated because p2 resolution is slow and network-bound. #
+  #############################################################
+  java:
+    name: Java (Tycho bundle)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup JDK
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Caches the Maven repo *and* Tycho's p2 cache
+      # (~/.m2/repository/.cache/tycho), which is the expensive part.
+      - name: Cache Maven and Tycho p2
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('server-java/pom.xml', 'server-java/META-INF/MANIFEST.MF') }}
+          restore-keys: maven-${{ runner.os }}-
+
+      # Invoked as `mvn` rather than `./mvnw` so this works whether or not the
+      # Maven wrapper has been committed to server-java/.
+      - name: Build analyzer bundle
+        run: mvn -B -ntp -f server-java/pom.xml verify
+
+      - name: Upload analyzer jar
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: catchme-jdt-jar
+          path: server-java/target/org.leplus.catchme.jdt-*.jar
+          if-no-files-found: error
+
+  ##############################################################
+  # Real jdt.ls analysis, with no VS Code and no display.       #
+  # Runs the language server as a plain Java process, loads the #
+  # analyzer bundle into it, and drives the delegate commands   #
+  # over LSP. This is what actually proves the Java backend.    #
+  ##############################################################
+  jdtls:
+    name: Java analysis (real jdt.ls)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup JDK
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Maven and Tycho p2
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('server-java/pom.xml', 'server-java/META-INF/MANIFEST.MF') }}
+          restore-keys: maven-${{ runner.os }}-
+
+      # jdt.ls is a ~50 MB download; cache it across runs.
+      - name: Cache jdt.ls
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/catchme-jdtls
+          key: jdtls-1.60.0-202606262232
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build analyzer bundle
+        run: pnpm run build:server && pnpm run copy:server
+
+      - name: Run jdt.ls integration test
+        env:
+          JDTLS_HOME: ~/.cache/catchme-jdtls
+        run: pnpm --filter catchme run test:jdtls
+
+  ##############################################################
+  # VS Code integration tests. `xvfb-run` is installed via apt  #
+  # rather than an action: that is the approach VS Code's own   #
+  # extension-testing docs prescribe, and it adds no            #
+  # third-party supply-chain surface.                           #
+  ##############################################################
+  integration:
+    name: Integration (VS Code)
+    runs-on: ubuntu-latest
+    needs: node
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      # Skips cleanly until the integration harness exists, then starts running
+      # automatically — no workflow edit needed.
+      - name: Detect integration test config
+        id: detect
+        run: |
+          if [ -f packages/core/.vscode-test.mjs ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No packages/core/.vscode-test.mjs yet — skipping integration tests."
+          fi
+
+      - name: Install xvfb
+        if: steps.detect.outputs.present == 'true'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Run integration tests
+        if: steps.detect.outputs.present == 'true'
+        run: xvfb-run -a pnpm --filter catchme run test:integration

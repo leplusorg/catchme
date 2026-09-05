@@ -1,0 +1,18 @@
+{
+  "name": "@leplusorg/catchme-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Homepage for the CatchMe VS Code extension (static, built with Eleventy).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "eleventy",
+    "serve": "eleventy --serve",
+    "clean": "rm -rf _site",
+    "lint": "echo \"(no typecheck: plain templates and CSS)\"",
+    "test": "node test/build.test.mjs"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6"
+  }
+}

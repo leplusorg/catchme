@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: CatchMe JDT Analyzer
+Bundle-SymbolicName: org.leplus.catchme.jdt;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: Leplus.org
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ls.core
+Bundle-ActivationPolicy: lazy
+Automatic-Module-Name: org.leplus.catchme.jdt

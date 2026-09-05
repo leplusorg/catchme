@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or site.name }} — {{ site.tagline }}</title>
+    <meta name="description" content="{{ description }}" />
+    <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+    <link rel="icon" href="{{ '/assets/icon.png' | url }}" type="image/png" />
+    <link rel="stylesheet" href="{{ '/styles.css' | url }}" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ title or site.name }} — {{ site.tagline }}" />
+    <meta property="og:description" content="{{ description }}" />
+    <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+    <meta property="og:image" content="{{ site.url }}/assets/icon.png" />
+    <meta name="twitter:card" content="summary" />
+    {# No web fonts and no scripts: nothing here makes a third-party request. #}
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="topbar">
+      <a class="brand" href="{{ '/' | url }}">
+        <img src="{{ '/assets/icon.png' | url }}" alt="" width="28" height="28" />
+        <span>{{ site.name }}</span>
+      </a>
+      <nav>
+        <a href="{{ '/docs/' | url }}">Docs</a>
+        <a href="{{ site.repo }}">GitHub</a>
+        <a href="{{ site.issues }}">Issues</a>
+        <a href="{{ site.marketplace }}">Marketplace</a>
+      </nav>
+    </header>
+
+    <main id="main">{{ content | safe }}</main>
+
+    <footer>
+      <p>
+        <a href="{{ site.repo }}">Source</a> ·
+        <a href="{{ site.releases }}">Releases</a> ·
+        <a href="{{ site.issues }}">Issues</a> ·
+        <a href="{{ site.contributing }}">Contributing</a> ·
+        <a href="{{ site.security }}">Security</a> ·
+        <a href="{{ site.repo }}/blob/main/LICENSE">Apache-2.0</a> ·
+        <a href="https://www.leplus.org">Leplus.org</a>
+      </p>
+      <p class="fine">
+        Built with Eleventy. No trackers, no cookies, no JavaScript.
+      </p>
+    </footer>
+  </body>
+</html>

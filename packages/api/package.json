@@ -1,0 +1,31 @@
+{
+  "name": "@leplusorg/catchme-api",
+  "version": "1.0.0",
+  "description": "Public provider API for the CatchMe exception-flow extension for VS Code.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leplusorg/catchme.git",
+    "directory": "packages/api"
+  },
+  "homepage": "https://leplusorg.github.io/catchme/",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/vscode": "1.90.0",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,0 +1,19 @@
+---
+rules:
+  forbidden-uses:
+    config:
+      allow:
+        - Azure/*
+        - actions/*
+        - aws-actions/*
+        - docker/*
+        - github/*
+        - google-github-actions/*
+        - google/*
+        - googleapis/*
+        - leplusorg/*
+        - microsoft/*
+        - ossf/*
+        - pnpm/action-setup
+        - sigstore/*
+        - super-linter/super-linter

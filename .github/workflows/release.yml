@@ -1,0 +1,138 @@
+---
+##################################################################
+## Publish the extension and the npm packages on a new release  ##
+##################################################################
+# Three distinct publish targets:
+#   1. VS Code Marketplace  (secrets.VSCE_PAT)
+#   2. Open VSX             (secrets.OVSX_PAT)  - VSCodium/Gitpod/Cursor users
+#   3. npm                  (secrets.NPM_TOKEN) - the two public packages
+#
+# vsce/ovsx are invoked as npm CLIs rather than third-party Actions: those are
+# the official tools, and it keeps the .zizmor.yml allowlist small.
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  #################################################################
+  # Build the .vsix, publish it, and attach it to the GH release. #
+  #################################################################
+  extension:
+    name: Publish extension
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # upload the .vsix as a release asset
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup JDK
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Released builds MUST embed the analyzer jar, otherwise Java support is
+      # silently dead in the published extension.
+      - name: Build analyzer bundle
+        run: pnpm run build:server && pnpm run copy:server
+
+      - name: Build
+        run: pnpm run build
+
+      # Tag is passed through env, never interpolated into the script body.
+      - name: Verify version matches tag
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          if [ "${TAG#v}" != "$VERSION" ]; then
+            echo "::error::Release tag '$TAG' does not match extension version '$VERSION'"
+            exit 1
+          fi
+
+      - name: Package
+        run: pnpm --filter catchme run package
+
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx --yes @vscode/vsce publish --packagePath catchme.vsix
+
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: npx --yes ovsx publish catchme.vsix --pat "$OVSX_PAT"
+
+      - name: Attach .vsix to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" catchme.vsix --clobber
+
+  ##########################################################
+  # Publish the two public npm packages, with provenance.  #
+  ##########################################################
+  npm:
+    name: Publish npm packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance attestation
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [api, testkit]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      # `pnpm publish`, not `npm publish`: testkit depends on the api package via
+      # `workspace:*`, and only pnpm rewrites that to a real version range on
+      # publish. npm would ship a manifest nobody can install.
+      - name: Publish
+        working-directory: packages/${{ matrix.package }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --access public --no-git-checks --provenance

@@ -1,0 +1,35 @@
+{
+  "name": "catchme-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CatchMe \u2014 Exception Flow Explorer for Visual Studio Code (monorepo root)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leplusorg/catchme.git"
+  },
+  "homepage": "https://leplusorg.github.io/catchme/",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "typecheck": "tsc --build",
+    "//build:server": "Runs the Maven wrapper from server-java/ (mvnw resolves .mvn/ relative to the cwd, so the cd is required).",
+    "build:server": "cd server-java && ./mvnw -B verify",
+    "copy:server": "mkdir -p packages/core/server && cp server-java/target/org.leplus.catchme.jdt-*.jar packages/core/server/catchme.jdt.jar",
+    "//build:all": "Both halves: the TypeScript workspace and the jdt.ls analyzer jar. The Java step needs Maven and is slow on a cold p2 cache.",
+    "build:all": "pnpm run build && pnpm run build:server && pnpm run copy:server",
+    "package": "pnpm run build && pnpm --filter catchme run package",
+    "site": "pnpm --filter @leplusorg/catchme-site run serve"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.3"
+  }
+}

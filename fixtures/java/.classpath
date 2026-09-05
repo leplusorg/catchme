@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/main/java"/>
+	<!-- Bare JRE_CONTAINER resolves to whatever JDK jdt.ls is running on. Do NOT
+	     pin an execution environment here: the fixtures use no version-specific
+	     syntax, and pinning would break on runners without that exact EE. -->
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

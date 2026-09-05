@@ -1,0 +1,18 @@
+# Sources and build metadata are not shipped: esbuild bundles everything
+# reachable from src/extension.ts into dist/.
+src/**
+out/**
+test/**
+node_modules/**
+tsconfig.json
+tsconfig.tsbuildinfo
+.vscode-test/**
+**/*.ts
+**/*.map
+
+# Icon source; only the rendered PNG ships.
+media/marketplace-icon.svg
+
+# Explicitly kept: dist/**, server/**, media/**, package.json, README.md
+!dist/**
+!server/*.jar

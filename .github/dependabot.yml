@@ -1,0 +1,35 @@
+---
+version: 2
+updates:
+  # pnpm workspace. A single root pnpm-lock.yaml covers every packages/*
+  # manifest, so one entry at "/" updates the whole graph. Do NOT add
+  # per-package entries: packages/*/ have no lockfile of their own.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build(deps)
+      prefix-development: chore(dev-deps)
+  # Only sees Maven-resolved artifacts, i.e. the Tycho plugins. The Eclipse
+  # platform and jdt.ls bundles come from the p2 repositories declared in the
+  # pom and are invisible to Dependabot — bump those URLs by hand.
+  - package-ecosystem: "maven"
+    directory: "/server-java/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build(deps)
+      prefix-development: chore(dev-deps)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci(deps)

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The Java analyzer that runs *inside* jdt.ls.
+
+  This is an OSGi bundle (Tycho `eclipse-plugin` packaging), not a plain jar:
+  jdt.ls loads it through `contributes.javaExtensions` in the VS Code manifest,
+  and it registers a delegate command handler so the TypeScript side can invoke
+  it via `java.execute.workspaceCommand`.
+
+  Dependencies come from META-INF/MANIFEST.MF resolved against the p2 target
+  platform below — there is no <dependencies> section.
+
+  Build:  mvn -B verify           (from this directory; no wrapper is checked in
+                                   yet — add one with `mvn -N wrapper:wrapper`)
+  Output: target/org.leplus.catchme.jdt-1.0.0-SNAPSHOT.jar
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.leplus</groupId>
+  <!-- Tycho requires artifactId == Bundle-SymbolicName. -->
+  <artifactId>org.leplus.catchme.jdt</artifactId>
+  <!-- Must track Bundle-Version (1.0.0.qualifier) in META-INF/MANIFEST.MF. -->
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>eclipse-plugin</packaging>
+  <name>CatchMe JDT Analyzer</name>
+
+  <properties>
+    <tycho.version>5.0.4</tycho.version>
+    <java.minVersion>21</java.minVersion>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Reproducible builds; CI overrides via the source-date-epoch profile. -->
+    <project.build.outputTimestamp>2026-01-01T00:00:00Z</project.build.outputTimestamp>
+  </properties>
+
+  <repositories>
+    <!-- Eclipse platform + JDT. Recent trains require JavaSE-21 as the minimum EE. -->
+    <repository>
+      <id>eclipse-release</id>
+      <layout>p2</layout>
+      <url>https://download.eclipse.org/releases/2026-06/</url>
+    </repository>
+    <!-- jdt.ls, for org.eclipse.jdt.ls.core (the delegate-command extension point).
+         Pinned to a dated, immutable repository rather than .../repository/latest/,
+         which is a moving target that can break the build with no commit on our
+         side and makes old builds unreproducible.
+
+         This timestamp is the released jdt.ls 1.60.0 build
+         (jdt-language-server-1.60.0-202606262232), which pairs with the Eclipse
+         2026-06 platform pinned above. Note that jdt.ls publishes milestones as
+         tarballs only; the dated snapshot repositories are the sole p2 form, so
+         "snapshot" here denotes the layout, not an unstable build.
+
+         To bump: list https://download.eclipse.org/jdtls/snapshots/repository/
+         and pick the dated directory matching the jdt.ls release you want. -->
+    <repository>
+      <id>jdt-ls</id>
+      <layout>p2</layout>
+      <url>https://download.eclipse.org/jdtls/snapshots/repository/1.60.0.202606262232/</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <executionEnvironment>JavaSE-21</executionEnvironment>
+          <environments>
+            <environment><os>macosx</os><ws>cocoa</ws><arch>aarch64</arch></environment>
+            <environment><os>macosx</os><ws>cocoa</ws><arch>x86_64</arch></environment>
+            <environment><os>linux</os><ws>gtk</ws><arch>x86_64</arch></environment>
+            <environment><os>linux</os><ws>gtk</ws><arch>aarch64</arch></environment>
+            <environment><os>win32</os><ws>win32</ws><arch>x86_64</arch></environment>
+          </environments>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <source>${java.minVersion}</source>
+          <target>${java.minVersion}</target>
+          <showWarnings>true</showWarnings>
+          <showDeprecation>true</showDeprecation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>source-date-epoch</id>
+      <activation>
+        <property><name>env.SOURCE_DATE_EPOCH</name></property>
+      </activation>
+      <properties>
+        <project.build.outputTimestamp>${env.SOURCE_DATE_EPOCH}</project.build.outputTimestamp>
+      </properties>
+    </profile>
+  </profiles>
+</project>

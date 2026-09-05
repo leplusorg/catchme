@@ -1,0 +1,226 @@
+{
+  "name": "catchme",
+  "displayName": "CatchMe \u2014 Exception Flow Explorer",
+  "description": "Find where a thrown exception can be caught \u2014 or simulate one from any line.",
+  "version": "1.0.0",
+  "publisher": "leplusorg",
+  "license": "Apache-2.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leplusorg/catchme.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://leplusorg.github.io/catchme/",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Visualization",
+    "Debuggers"
+  ],
+  "keywords": [
+    "exception",
+    "try",
+    "catch",
+    "control flow",
+    "java"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "media/icon.png",
+  "//activationEvents": "Command-driven activation is inferred from contributes.commands; onLanguage:java additionally wires context keys eagerly in Java files. NOTE: redhat.java is deliberately NOT an extensionDependency so non-Java languages can use the generic provider without it; JavaProvider checks for it at runtime.",
+  "activationEvents": [
+    "onLanguage:java"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "catchme.findCatchers",
+        "title": "Find Where This Is Caught",
+        "category": "CatchMe"
+      },
+      {
+        "command": "catchme.simulateThrow",
+        "title": "Simulate Exception From Here\u2026",
+        "category": "CatchMe"
+      },
+      {
+        "command": "catchme.rerun",
+        "title": "Re-run Analysis",
+        "category": "CatchMe",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "catchme.clear",
+        "title": "Clear Results",
+        "category": "CatchMe",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "catchme.expandPath",
+        "title": "Expand Further",
+        "category": "CatchMe",
+        "icon": "$(debug-continue-small)"
+      },
+      {
+        "command": "catchme.copyPath",
+        "title": "Copy Path as Stack Trace",
+        "category": "CatchMe",
+        "icon": "$(copy)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "catchme.findCatchers",
+          "when": "catchme.onThrowStatement",
+          "group": "navigation@10"
+        },
+        {
+          "command": "catchme.simulateThrow",
+          "when": "catchme.supportedLanguage",
+          "group": "navigation@11"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "catchme.rerun",
+          "when": "view == catchme.flowView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "catchme.clear",
+          "when": "view == catchme.flowView",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "catchme.rerun",
+          "when": "false"
+        },
+        {
+          "command": "catchme.clear",
+          "when": "false"
+        },
+        {
+          "command": "catchme.expandPath",
+          "when": "false"
+        },
+        {
+          "command": "catchme.copyPath",
+          "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "catchme.copyPath",
+          "when": "view == catchme.flowView && viewItem =~ /catchme\\.(root|destination|path)/",
+          "group": "inline"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "catchme",
+          "title": "CatchMe",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "catchme": [
+        {
+          "id": "catchme.flowView",
+          "name": "Exception Flow"
+        }
+      ]
+    },
+    "javaExtensions": [
+      "./server/catchme.jdt.jar"
+    ],
+    "configuration": {
+      "title": "CatchMe",
+      "properties": {
+        "catchme.analysis.maxDepth": {
+          "type": "number",
+          "default": 8,
+          "minimum": 1,
+          "maximum": 64,
+          "description": "Maximum interprocedural hops when following callers."
+        },
+        "catchme.analysis.precision": {
+          "type": "string",
+          "default": "possible",
+          "enum": [
+            "definite",
+            "possible",
+            "all"
+          ],
+          "markdownEnumDescriptions": [
+            "Only handlers that definitely match.",
+            "Also include approximate matches (virtual dispatch, subtype ambiguity).",
+            "Everything, including `unknown` walls where analysis stops."
+          ],
+          "description": "How much approximation to include in results."
+        },
+        "catchme.analysis.includeLibraryCode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Follow propagation into dependencies and the standard library."
+        },
+        "catchme.analysis.timeoutMs": {
+          "type": "number",
+          "default": 15000,
+          "description": "Time budget per analysis; partial results are kept when exceeded."
+        },
+        "catchme.view.autoPeek": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open a Peek at the first handler after an analysis completes."
+        },
+        "catchme.diagnostics.reportUncaught": {
+          "type": "boolean",
+          "default": false,
+          "description": "Report uncaught results as Information diagnostics in the Problems panel."
+        },
+        "catchme.providerOverrides": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          },
+          "markdownDescription": "Force a specific analysis engine per language, overriding automatic selection. Keys are language ids; values are a provider's `engine` name \u2014 e.g. `{ \"java\": \"Generic (syntactic + LSP Call Hierarchy)\" }` to bypass jdt.ls."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "watch": "pnpm run build --watch",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node test/smoke.cjs",
+    "package": "vsce package --no-dependencies --out ../../catchme.vsix",
+    "clean": "rm -rf dist out tsconfig.tsbuildinfo",
+    "compile-tests": "tsc -p tsconfig.json",
+    "test:integration": "pnpm run compile-tests && vscode-test",
+    "test:jdtls": "node test/jdtls-integration.mjs"
+  },
+  "dependencies": {
+    "@leplusorg/catchme-api": "workspace:*",
+    "@leplusorg/catchme-provider-java": "workspace:*",
+    "@leplusorg/catchme-provider-lsp": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.7.0",
+    "@types/vscode": "1.90.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.1.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.3"
+  }
+}

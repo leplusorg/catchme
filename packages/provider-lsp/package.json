@@ -1,0 +1,24 @@
+{
+  "name": "@leplusorg/catchme-provider-lsp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generic LSP + tree-sitter exception-flow provider (baseline for any language).",
+  "license": "Apache-2.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@leplusorg/catchme-api": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "@types/vscode": "1.90.0",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.11"
+  }
+}

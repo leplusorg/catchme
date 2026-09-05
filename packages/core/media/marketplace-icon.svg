@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!--
+    Source for the Marketplace icon (media/icon.png). Kept in the repo so the
+    PNG can be regenerated:
+
+        rsvg-convert -w 128 -h 128 -o icon.png marketplace-icon.svg
+
+    Same mark as the activity-bar icon (media/icon.svg) — an exception escaping
+    upward out of an enclosing scope — but full-bleed and full-colour. The
+    activity-bar version must stay monochrome `currentColor` so it follows the
+    theme; this one must not, because Marketplace tiles sit on their own
+    background and a transparent monochrome render would disappear.
+  -->
+  <rect width="128" height="128" rx="28" fill="#1E2333"/>
+
+  <!-- The enclosing scope: a try block the exception is leaving. -->
+  <path d="M32 102 L32 74 Q32 60 46 60 L82 60 Q96 60 96 74 L96 102"
+        fill="none" stroke="#E8ECF5" stroke-width="9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- The exception, escaping. Amber so the eye lands on it first. -->
+  <g fill="none" stroke="#F5A524" stroke-width="9"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 60 L64 24"/>
+    <path d="M50 38 L64 24 L78 38"/>
+  </g>
+</svg>

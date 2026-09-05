@@ -1,0 +1,387 @@
+/*
+ * Hand-written, no framework, no build step — Eleventy copies this verbatim.
+ *
+ * The palette is lifted from the extension icon so the site and the Marketplace
+ * tile read as one thing: ink background, light text, amber for the exception.
+ * Amber is reserved for the *exception* everywhere, on the page as in the tree,
+ * so the accent always means the same thing.
+ */
+
+:root {
+  --ink: #1e2333;
+  --ink-raised: #262c40;
+  --ink-line: #333a52;
+  --text: #e8ecf5;
+  --text-dim: #a3adc4;
+  --amber: #f5a524;
+  --green: #4ade80;
+  --measure: 68ch;
+  --pad: clamp(1rem, 4vw, 2rem);
+
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--amber);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Visible only once focused, so keyboard users get a way past the header. */
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+.skip:focus {
+  left: var(--pad);
+  top: var(--pad);
+  z-index: 10;
+  background: var(--ink-raised);
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+}
+
+/* ---------------------------------------------------------------- chrome */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem var(--pad);
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+.brand img {
+  border-radius: 6px;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.95rem;
+}
+.topbar nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+}
+.topbar nav a:hover {
+  color: var(--text);
+}
+
+footer {
+  border-top: 1px solid var(--ink-line);
+  padding: 2rem var(--pad) 3rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  text-align: center;
+}
+footer p {
+  margin: 0.25rem 0;
+}
+.fine {
+  color: color-mix(in srgb, var(--text-dim) 70%, transparent);
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------- layout */
+
+section {
+  padding: clamp(2.5rem, 7vw, 4.5rem) var(--pad);
+  border-bottom: 1px solid var(--ink-line);
+}
+section:last-of-type {
+  border-bottom: 0;
+}
+
+.wrap {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+.wrap-wide {
+  max-width: 78ch;
+  margin-inline: auto;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h1 {
+  font-size: clamp(2.1rem, 1.4rem + 3.2vw, 3.4rem);
+  margin: 0 0 0.6rem;
+}
+h2 {
+  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem);
+  margin: 0 0 1rem;
+}
+h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.35rem;
+}
+
+.lede {
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.3rem);
+  color: var(--text-dim);
+  margin: 0 0 1.75rem;
+  text-wrap: pretty;
+}
+
+/* ----------------------------------------------------------------- hero */
+
+.hero {
+  text-align: center;
+  padding-block: clamp(3rem, 9vw, 6rem);
+  /* Faint warm glow behind the title, echoing the icon's amber. */
+  background:
+    radial-gradient(
+      60ch 30ch at 50% -10%,
+      color-mix(in srgb, var(--amber) 12%, transparent),
+      transparent 70%
+    ),
+    var(--ink);
+}
+.hero .lede {
+  margin-inline: auto;
+  max-width: 54ch;
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.35rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--ink-line);
+  color: var(--text);
+  background: var(--ink-raised);
+}
+.btn:hover {
+  border-color: color-mix(in srgb, var(--amber) 50%, var(--ink-line));
+}
+.btn-primary {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #241a05;
+}
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--amber) 88%, white);
+}
+
+.version {
+  margin: 1.5rem 0 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+.version code {
+  background: var(--ink-raised);
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------- pieces */
+
+.pair {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26ch), 1fr));
+}
+
+.card {
+  background: var(--ink-raised);
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+}
+.card p:last-child {
+  margin-bottom: 0;
+}
+
+.num {
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+/* The rendered tree stands in for a screenshot: it is the actual output
+   shape, and unlike an image it stays readable and selectable at any size. */
+.tree {
+  background: #171b28;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: 1.85;
+  white-space: pre;
+  tab-size: 2;
+}
+.tree .t-exc {
+  color: var(--amber);
+  font-weight: 600;
+}
+.tree .t-ok {
+  color: var(--green);
+}
+.tree .t-dim {
+  color: var(--text-dim);
+}
+.tree .t-note {
+  color: color-mix(in srgb, var(--text-dim) 75%, transparent);
+}
+
+dl.facts {
+  display: grid;
+  gap: 0.75rem 1.5rem;
+  grid-template-columns: max-content 1fr;
+  margin: 0;
+}
+dl.facts dt {
+  font-weight: 650;
+  color: var(--text);
+}
+dl.facts dd {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+@media (max-width: 34rem) {
+  dl.facts {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+  dl.facts dd {
+    margin-bottom: 0.6rem;
+  }
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--ink-raised);
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+/* ------------------------------------------------------- docs page only */
+
+/* Markdown content: the docs page is prose, so it needs table, kbd and
+   heading rules the landing page never exercises. */
+.wrap-wide table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.94rem;
+}
+.wrap-wide th,
+.wrap-wide td {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--ink-line);
+  vertical-align: top;
+}
+.wrap-wide th {
+  color: var(--text);
+  font-weight: 650;
+  border-bottom-color: color-mix(in srgb, var(--amber) 40%, var(--ink-line));
+}
+.wrap-wide td {
+  color: var(--text-dim);
+}
+.wrap-wide td code {
+  white-space: nowrap;
+}
+
+.wrap-wide h1 {
+  font-size: clamp(1.9rem, 1.4rem + 2vw, 2.6rem);
+  margin-bottom: 1rem;
+}
+.wrap-wide h2 {
+  margin-top: 2.75rem;
+  padding-top: 0.5rem;
+}
+.wrap-wide h3 {
+  margin-top: 1.75rem;
+  color: var(--text);
+}
+.wrap-wide ol,
+.wrap-wide ul {
+  padding-left: 1.25rem;
+}
+.wrap-wide li {
+  margin: 0.35rem 0;
+}
+
+pre {
+  background: #171b28;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+kbd {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  background: var(--ink-raised);
+  border: 1px solid var(--ink-line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+}

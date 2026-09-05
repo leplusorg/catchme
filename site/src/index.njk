@@ -1,0 +1,203 @@
+---
+layout: base.njk
+title: CatchMe
+description: Follow an exception from throw to the catch that actually handles it — across function boundaries, not just within one. A VS Code extension.
+---
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Where does this exception<br />actually get caught?</h1>
+    <p class="lede">
+      Editors already highlight <code>try</code>/<code>catch</code> pairs inside
+      one function. CatchMe follows an exception <strong>across</strong> function
+      boundaries — through every caller — to the handler that really catches it.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="{{ site.marketplace }}">Install for VS&nbsp;Code</a>
+      <a class="btn" href="{{ site.openvsx }}">Open VSX</a>
+      <a class="btn" href="{{ site.repo }}">View source</a>
+    </div>
+
+    {# Resolved at build time; the page still renders if there is no release
+       yet, or if the API was unreachable during the build. #}
+    <p class="version">
+      {%- if release.available %}
+        Latest release
+        <a href="{{ release.url }}"><code>{{ release.tag }}</code></a>
+        · <a href="{{ site.releases }}">all releases</a>
+      {%- else %}
+        <a href="{{ site.releases }}">Releases</a>
+      {%- endif %}
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap-wide">
+    <h2>Two questions, answered from the editor</h2>
+    <div class="pair">
+      <div class="card">
+        <p class="num">01</p>
+        <h3>Where can this be caught?</h3>
+        <p>
+          Right-click a <code>throw</code> and see every handler it can reach —
+          including handlers in callers, after it escapes the current function.
+        </p>
+      </div>
+      <div class="card">
+        <p class="num">02</p>
+        <h3>What if I threw one here?</h3>
+        <p>
+          Right-click anywhere, pick an exception type, and see where it would
+          land. No code edits, no debugger, no rebuild.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap-wide">
+    <h2>The whole path, not just the destination</h2>
+    <p class="lede">
+      Results group by <em>where the exception ends up</em>, with the call chain
+      that reaches each one underneath. Every hop shows where it was called from
+      and jumps straight there.
+    </p>
+
+<div class="tree"><span class="t-exc">▾ 🔥 IOException</span>                       <span class="t-dim">2 destinations · 3 paths</span>
+  <span class="t-ok">▾ ✓ catch (IOException e)</span>              <span class="t-dim">Service.java:88 · definite</span>
+      <span class="t-exc">🔥 throw new IOException(…)</span>            <span class="t-dim">Repo.java:42</span>
+      <span class="t-dim">↑</span>  Repo.load()                <span class="t-dim">called at Service.java:71</span>
+      <span class="t-ok">✓</span>  catch (IOException e)         <span class="t-dim">Service.java:88</span>
+  <span class="t-dim">▸ ~ catch (Exception e)</span>                 <span class="t-dim">Api.java:23 · possible</span>
+  <span class="t-dim">▸ ⛔ uncaught — no caller found</span>          <span class="t-note">1 path</span>
+</div>
+
+    <p style="margin-top:1.25rem">
+      Chains that converge on one handler collapse into a single destination.
+      Library frames fold away. A search stopped by the depth limit ends in an
+      <em>expand further</em> action rather than pretending it finished.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap-wide">
+    <h2>Honest about what it knows</h2>
+    <p>
+      Static exception analysis cannot be exact in the presence of virtual
+      dispatch, lambdas, reflection or dynamic typing. CatchMe never pretends
+      otherwise — every result is labelled.
+    </p>
+    <dl class="facts">
+      <dt><span class="t-ok">✓</span> definite</dt>
+      <dd>The handler certainly applies, proven against a real type hierarchy.</dd>
+      <dt><span class="t-dim">~</span> possible</dt>
+      <dd>Approximate — reached through virtual dispatch, or the language offers no type information.</dd>
+    </dl>
+    <p style="margin-top:1.5rem">
+      A chain is rated by its <strong>weakest</strong> hop: one approximate step
+      makes the whole route <code>possible</code>, even when the final type match
+      is exact. A destination is rated by its <strong>best</strong> route,
+      because reachability asks whether <em>any</em> chain gets there. A backend
+      without real type information is structurally prevented from ever claiming
+      <code>definite</code>.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap-wide">
+    <h2>How it works</h2>
+    <p>
+      Exception semantics differ enormously between languages, but “who calls
+      this function?” does not. CatchMe splits along exactly that line: a
+      language-agnostic core owns the interprocedural walk — running on standard
+      LSP Call Hierarchy — while pluggable providers own language semantics.
+    </p>
+    <div class="pair" style="margin-top:1.5rem">
+      <div class="card">
+        <h3>Deep providers</h3>
+        <p>
+          Java runs Eclipse JDT inside the language server, so it has real type
+          bindings: <code>IOException</code> matched by
+          <code>catch (Exception e)</code> resolves as <code>definite</code>.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Generic provider</h3>
+        <p>
+          Any brace-style language gets a syntactic baseline with no extra setup
+          — answering <code>possible</code>, never more.
+        </p>
+      </div>
+    </div>
+    <p style="margin-top:1.5rem">
+      Adding a language means writing a provider, not touching the core. The
+      contract is published as
+      <code>@leplusorg/catchme-api</code>, with a conformance suite to check
+      an implementation against.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap-wide">
+    <h2>Requirements</h2>
+    <dl class="facts">
+      <dt>Java</dt>
+      <dd>
+        <a href="https://marketplace.visualstudio.com/items?itemName=redhat.java">Language
+        Support for Java by Red Hat</a>, running in Standard mode.
+      </dd>
+      <dt>Other languages</dt>
+      <dd>The language's own extension, if it implements LSP Call Hierarchy.</dd>
+    </dl>
+    <p style="margin-top:1.5rem">
+      Red Hat's Java extension is deliberately <em>not</em> a hard dependency, so
+      you can install CatchMe without it and still use every other language.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap-wide">
+    <h2>Get involved</h2>
+    <p class="lede">
+      CatchMe is Apache-2.0 licensed and developed in the open.
+    </p>
+    <div class="pair">
+      <div class="card">
+        <h3>Found a bug?</h3>
+        <p>
+          <a href="{{ site.newIssue }}">Open an issue</a> — there are templates
+          for bug reports, feature requests and questions. Existing reports are
+          in the <a href="{{ site.issues }}">issue tracker</a>.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Want to contribute?</h3>
+        <p>
+          The <a href="{{ site.contributing }}">contributing guide</a> covers the
+          build, the test layers and how changes get reviewed.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Adding a language?</h3>
+        <p>
+          Providers plug in from outside the extension. Start with the
+          <a href="{{ site.providerApi }}">provider API</a> and check your
+          implementation against the conformance suite.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Security issue?</h3>
+        <p>
+          Please follow the <a href="{{ site.security }}">security policy</a>
+          rather than filing a public issue.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
