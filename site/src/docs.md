@@ -16,25 +16,25 @@ time, so they cannot drift from what ships.
 
 ## Install
 
-From inside VS Code, open the Extensions view and search for **CatchMe**, or run
+From inside Visual Studio Code, open the Extensions view and search for **CatchMe**, or run
 this from the Command Palette (<kbd>Ctrl/Cmd</kbd>+<kbd>P</kbd>):
 
 ```
 ext install {{ extension.id }}
 ```
 
-It is also on the [VS Code Marketplace]({{ site.marketplace }}) and
-[Open VSX]({{ site.openvsx }}) for VSCodium, Gitpod and Cursor. Requires VS Code
+It is also on the [Visual Studio Code Marketplace]({{ site.marketplace }}) and
+[Open VSX]({{ site.openvsx }}) for VSCodium, Gitpod and Cursor. Requires Visual Studio Code
 `{{ extension.vscodeVersion }}` or later.
 
 ### Language support
 
-| Language | You also need | Answers are |
-|---|---|---|
-| Java | [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java), in **Standard** mode | `definite` |
-| Other brace-style languages | The language's own extension, if it implements LSP Call Hierarchy | `possible` |
+| Language                    | You also need                                                                                                                 | Answers are |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Java                        | [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java), in **Standard** mode | `definite`  |
+| Other brace-style languages | The language's own extension, if it implements LSP Call Hierarchy                                                             | `possible`  |
 
-Red Hat's Java extension is deliberately *not* a hard dependency — CatchMe
+Red Hat's Java extension is deliberately _not_ a hard dependency — CatchMe
 installs and works for other languages without it.
 
 ## Using it
@@ -72,14 +72,14 @@ call chain that reaches each one nested underneath:
   <span class="t-dim">▸ ⛔ uncaught — no caller found</span>          <span class="t-note">1 path</span>
 </div>
 
-| Marker | Meaning |
-|---|---|
-| 🔥 | The throw site the chain starts from |
-| ↑ | A frame the exception escaped, showing where it was called from |
-| ✓ | A handler that catches it |
-| ~ | Same, but only `possible` — see below |
-| ⛔ | Nothing catches it; it leaves the program or thread |
-| ⋯ | The search stopped at the depth limit — click to expand further |
+| Marker | Meaning                                                         |
+| ------ | --------------------------------------------------------------- |
+| 🔥     | The throw site the chain starts from                            |
+| ↑      | A frame the exception escaped, showing where it was called from |
+| ✓      | A handler that catches it                                       |
+| ~      | Same, but only `possible` — see below                           |
+| ⛔     | Nothing catches it; it leaves the program or thread             |
+| ⋯      | The search stopped at the depth limit — click to expand further |
 
 Clicking a hop jumps to its **call site**, not its declaration: that is the line
 where the exception actually leaves for the next frame.
@@ -94,10 +94,10 @@ dynamic typing, so every result says how much it is worth:
 
 Two rules follow, and they point in opposite directions on purpose:
 
-- A **chain** is rated by its *weakest* hop. One approximate step makes the whole
+- A **chain** is rated by its _weakest_ hop. One approximate step makes the whole
   route `possible`, even when the final type match is exact.
-- A **destination** is rated by its *best* route, because reachability asks
-  whether *any* chain gets there.
+- A **destination** is rated by its _best_ route, because reachability asks
+  whether _any_ chain gets there.
 
 A backend without real type information can never report `definite` — the core
 enforces that regardless of what a provider claims.
@@ -110,20 +110,20 @@ node. Set `catchme.analysis.includeLibraryCode` to follow into dependencies.
 
 ## Commands
 
-| Command | Where |
-|---|---|
-{% for c in extension.commands -%}
-| {{ c.title }} | {{ c.where }} |
-{% endfor %}
-All are available from the Command Palette as well.
+| Command                                             | Where         |
+| --------------------------------------------------- | ------------- |
+| {% for c in extension.commands -%}                  |
+| {{ c.title }}                                       | {{ c.where }} |
+| {% endfor %}                                        |
+| All are available from the Command Palette as well. |
 
 ## Settings
 
-| Setting | Default | Meaning |
-|---|---|---|
-{% for s in extension.settings -%}
-| `{{ s.id }}` | `{{ s.default }}` | {{ s.description }} |
-{% endfor %}
+| Setting                            | Default           | Meaning             |
+| ---------------------------------- | ----------------- | ------------------- |
+| {% for s in extension.settings -%} |
+| `{{ s.id }}`                       | `{{ s.default }}` | {{ s.description }} |
+| {% endfor %}                       |
 
 ## Troubleshooting
 

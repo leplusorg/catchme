@@ -10,13 +10,13 @@ Fixtures are ordinary source files in the target language, annotated with
 trailing comments. The kit parses these and compares them to the provider's
 `FlowResult`:
 
-| Annotation | Meaning |
-|---|---|
-| `// @throws <typeId>` | Marks the throw site to analyse, and its type |
-| `// @caught [definite\|possible]` | This line is the expected handler |
-| `// @escapes` | Expected to leave the enclosing function |
-| `// @uncaught` | Expected to reach a top-level boundary |
-| `// @unknown` | Analysis is expected to stop here |
+| Annotation                        | Meaning                                       |
+| --------------------------------- | --------------------------------------------- |
+| `// @throws <typeId>`             | Marks the throw site to analyse, and its type |
+| `// @caught [definite\|possible]` | This line is the expected handler             |
+| `// @escapes`                     | Expected to leave the enclosing function      |
+| `// @uncaught`                    | Expected to reach a top-level boundary        |
+| `// @unknown`                     | Analysis is expected to stop here             |
 
 See [`fixtures/java`](../../fixtures/java) for a worked example.
 
@@ -35,14 +35,14 @@ language**:
 ## Usage
 
 ```ts
-import { runConformance } from '@leplusorg/catchme-provider-testkit';
+import { runConformance } from "@leplusorg/catchme-provider-testkit";
 
 const report = await runConformance(
   myProvider,
-  [{ name: 'BasicHandlers.java', document }], // an opened vscode.TextDocument
+  [{ name: "BasicHandlers.java", document }], // an opened vscode.TextDocument
   {
-    strict: false,            // also fail on sinks the fixture did not predict
-    skip: ['cancellation'],   // opt out of checks you cannot satisfy yet
+    strict: false, // also fail on sinks the fixture did not predict
+    skip: ["cancellation"], // opt out of checks you cannot satisfy yet
     fail: (msg) => assert.fail(msg),
   },
 );
@@ -50,7 +50,7 @@ const report = await runConformance(
 ```
 
 You pass an **already-opened `TextDocument`**, not a URI. That keeps this
-package free of any `vscode` *runtime* dependency, so the kit — and its own
+package free of any `vscode` _runtime_ dependency, so the kit — and its own
 tests — run in plain Node while integration hosts supply a real document.
 
 The kit is assertion-library agnostic: pass a `fail` callback, or inspect the

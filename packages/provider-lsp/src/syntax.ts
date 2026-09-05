@@ -33,7 +33,7 @@ export interface TryBlock {
 export interface ThrowExpression {
   readonly start: number;
   readonly end: number;
-  /** Simple type name as written, e.g. `IOException`. Empty when unparseable. */
+  /** Simple type name as written, e.g. `IOException`. Empty when unparsable. */
   readonly typeName: string;
 }
 

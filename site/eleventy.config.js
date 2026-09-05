@@ -32,8 +32,7 @@ export default function (eleventyConfig) {
     contributing:
       "https://github.com/leplusorg/catchme/blob/main/CONTRIBUTING.md",
     security: "https://github.com/leplusorg/catchme/blob/main/SECURITY.md",
-    providerApi:
-      "https://github.com/leplusorg/catchme/tree/main/packages/api",
+    providerApi: "https://github.com/leplusorg/catchme/tree/main/packages/api",
     marketplace:
       "https://marketplace.visualstudio.com/items?itemName=leplusorg.catchme",
     openvsx: "https://open-vsx.org/extension/leplusorg/catchme",

@@ -1,19 +1,19 @@
 # `packages/` — the TypeScript workspace
 
-pnpm workspace containing the VS Code extension and its npm packages. The Java
+pnpm workspace containing the Visual Studio Code extension and its npm packages. The Java
 half of the project lives outside this tree, in
 [`server-java/`](../server-java), because it uses an entirely different
 toolchain.
 
 ## The packages
 
-| Package | npm name | Ships as | Purpose |
-|---|---|---|---|
-| [`api/`](api) | `@leplusorg/catchme-api` | npm | The public provider contract. Types only. |
-| [`core/`](core) | — | Marketplace (`.vsix`) | The extension: UI, orchestration, interprocedural engine. |
-| [`provider-java/`](provider-java) | — | bundled into core | Deep Java backend via jdt.ls. |
-| [`provider-lsp/`](provider-lsp) | — | bundled into core | Generic baseline for any language. |
-| [`testkit/`](testkit) | `@leplusorg/catchme-provider-testkit` | npm | Conformance suite for provider authors. |
+| Package                           | npm name                              | Ships as              | Purpose                                                   |
+| --------------------------------- | ------------------------------------- | --------------------- | --------------------------------------------------------- |
+| [`api/`](api)                     | `@leplusorg/catchme-api`              | npm                   | The public provider contract. Types only.                 |
+| [`core/`](core)                   | —                                     | Marketplace (`.vsix`) | The extension: UI, orchestration, interprocedural engine. |
+| [`provider-java/`](provider-java) | —                                     | bundled into core     | Deep Java backend via jdt.ls.                             |
+| [`provider-lsp/`](provider-lsp)   | —                                     | bundled into core     | Generic baseline for any language.                        |
+| [`testkit/`](testkit)             | `@leplusorg/catchme-provider-testkit` | npm                   | Conformance suite for provider authors.                   |
 
 ## Dependency edges
 

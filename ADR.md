@@ -16,22 +16,22 @@ one decision per file.
 
 ---
 
-## ADR-0001 — Build for VS Code, not Eclipse
+## ADR-0001 — Build for Visual Studio Code
 
 **Status:** Accepted
 
-**Context.** The idea started as an Eclipse plugin: right-click a `throw` to find
-its handlers, or simulate a throw anywhere and find where it would land. A
-working Tycho/OSGi prototype was built. But Eclipse gave the feature a ceiling —
-it locked the tool to one IDE and to Java, and the plugin's audience is shrinking
-rather than growing.
+**Context.** Since the first target language was Java, the idea
+started as an Eclipse plugin. But considering that the concept can
+apply to multiple languages, and that Visual Studio Code is currently the most
+popular IDE across most languages, making a Visual Studio Code extension seemed
+like the best way to reach the most developers.
 
-**Decision.** Target VS Code. Delete the Eclipse plugin rather than maintain two
-front ends.
+**Decision.** Target Visual Studio Code. Delete the Eclipse plugin rather than maintain two
+frontends.
 
 **Consequences.** Reaches a far larger audience and opens the door to other
 languages via LSP. The Eclipse JDT work was not wasted: the analysis logic moved
-into a bundle that now runs *inside* jdt.ls (ADR-0006), so the hardest part — the
+into a bundle that now runs _inside_ jdt.ls (ADR-0006), so the hardest part — the
 actual type-hierarchy reasoning — carried over. Cost: no Eclipse support, and
 nobody is asking for it back.
 
@@ -43,7 +43,7 @@ nobody is asking for it back.
 
 **Context.** The obvious build is a Java extension. But "where does this
 exception go?" is a question in every language with structured exception
-handling, and the *presentation* of the answer — grouping, ranking, navigation —
+handling, and the _presentation_ of the answer — grouping, ranking, navigation —
 is identical regardless of language. Baking Java into the core would mean
 rewriting all of it per language.
 
@@ -92,9 +92,9 @@ second-class experience — accepted, because the alternative is lying.
 **Context.** Once results span multiple call frames, "how confident are we?"
 has two different answers, and they point in opposite directions.
 
-**Decision.** Rate a **chain** by its *weakest* hop: one approximate step makes
+**Decision.** Rate a **chain** by its _weakest_ hop: one approximate step makes
 the whole route `possible`, even when the final type match is exact. Rate a
-**destination** by its *best* route, because reachability asks whether *any*
+**destination** by its _best_ route, because reachability asks whether _any_
 chain gets there.
 
 **Consequences.** Both rules are individually correct and the asymmetry is
@@ -122,7 +122,7 @@ better walk it themselves.
 **Consequences.** Any language whose extension implements Call Hierarchy — which
 is most of them — gets interprocedural analysis for free, from a provider that
 only answers local questions. The traversal bound, timeout and truncation logic
-live in one place. Cost: Call Hierarchy resolves *static* call graphs, so results
+live in one place. Cost: Call Hierarchy resolves _static_ call graphs, so results
 from this path are inherently `possible`.
 
 ---
@@ -132,7 +132,7 @@ from this path are inherently `possible`.
 **Status:** Accepted
 
 **Context.** Proving that `catch (IOException e)` handles a thrown
-`FileNotFoundException` requires a resolved type hierarchy. The VS Code
+`FileNotFoundException` requires a resolved type hierarchy. The Visual Studio Code
 extension host has no such thing. Options were: run our own JDT process
 (duplicating a full workspace index), approximate from syntax (giving up
 `definite`), or get inside the language server that already has the index.
@@ -163,7 +163,7 @@ plausible, confidently-labelled, wrong answers.
 suggestion to wait for Standard mode. Do not silently downgrade to `possible`.
 
 **Consequences.** Users may hit the refusal while a large project is still
-indexing, which is a worse first impression than showing *something*. Accepted:
+indexing, which is a worse first impression than showing _something_. Accepted:
 a wrong answer during the exact minutes a user is forming their opinion of the
 tool is more expensive than a clear "not yet". Downgrading was rejected because
 it would hide a transient, self-healing condition behind a permanent-looking
@@ -194,7 +194,7 @@ results without understanding why, so the docs lead with the requirement.
 
 **Status:** Accepted
 
-**Context.** ADR-0002's pluggability is only real if someone outside this repo
+**Context.** ADR-0002's pluggability is only real if someone outside this repository
 can act on it. A third-party author needs something to compile against and some
 way to know their implementation is correct.
 
@@ -206,7 +206,7 @@ Providers register by declaring `contributes.exceptionFlowProviders` in their ow
 manifest, which the core scans; this also allows lazy activation.
 
 **Consequences.** The contract is versioned and breaking changes are visible as
-semver rather than as silent runtime failures. The first-party providers are
+SemVer rather than as silent runtime failures. The first-party providers are
 held to the same conformance kit third parties get, so the kit cannot rot into a
 fiction. Cost: three packages to publish and keep in step.
 
@@ -294,7 +294,7 @@ bundle the extension into a single file.
 **Consequences.** Provider packages are consumed as real packages, so the
 published contract is exercised internally exactly as third parties will
 experience it. Cost: `--env-mode=loose` is needed because Turborepo otherwise
-drops `TMPDIR`, and the esbuild bundle can fail *silently* if the workspace link
+drops `TMPDIR`, and the esbuild bundle can fail _silently_ if the workspace link
 is broken — which happened, and now the smoke tests run against the real bundle
 (ADR-0015) partly to catch it.
 
@@ -326,7 +326,7 @@ invoking Maven.
 
 **Status:** Accepted
 
-**Context.** The correct way to test a VS Code extension is in a real extension
+**Context.** The correct way to test a Visual Studio Code extension is in a real extension
 host via `@vscode/test-electron`. In the development sandbox Electron cannot
 start at all — macOS denies `bootstrap_check_in`/`mach-register`. Six approaches
 were tried and none worked. Testing nothing was not an option.
@@ -334,7 +334,7 @@ were tried and none worked. Testing nothing was not an option.
 **Decision.** Three tiers that degrade rather than block:
 
 1. **Unit** (vitest) — pure logic, no `vscode`.
-2. **Smoke** (headless) — loads the *real* built `dist/extension.js` with a mock
+2. **Smoke** (headless) — loads the _real_ built `dist/extension.js` with a mock
    `vscode` module injected via `Module._load` interception.
 3. **Integration** — jdt.ls started as a plain Java process, driven over LSP,
    exercising the real delegate commands with no editor involved.
@@ -375,25 +375,7 @@ build step between edit and preview.
 
 ---
 
-## ADR-0017 — Serve from the GitHub Pages project URL, not a custom domain
-
-**Status:** Accepted (supersedes an earlier decision to use a custom domain)
-
-**Context.** A custom domain was chosen first, then reconsidered. It adds DNS
-records, certificate provisioning and a renewal to forget.
-
-**Decision.** Serve from `https://leplusorg.github.io/catchme/`. No CNAME.
-
-**Consequences.** Nothing to maintain and nothing to expire. Because this is a
-*project* page rather than a user page, the site lives under a `/catchme/` path
-prefix, which Eleventy handles via `pathPrefix` and the `url` filter — but any
-hardcoded absolute path silently 404s in production while looking correct in
-local preview. A build test rejects internal paths missing the prefix. Cost: a
-less memorable URL, and migrating later means redirects.
-
----
-
-## ADR-0018 — The site reads its version from the GitHub API at build time
+## ADR-0017 — The site reads its version from the GitHub API at build time
 
 **Status:** Accepted
 
@@ -413,7 +395,7 @@ as the last build.
 
 ---
 
-## ADR-0019 — Pin every external reference; verify the supply chain in CI
+## ADR-0018 — Pin every external reference; verify the supply chain in CI
 
 **Status:** Accepted
 
@@ -422,7 +404,7 @@ marketplace publish tokens in scope. Version ranges resolved at runtime make
 builds unreproducible and turn any upstream compromise into an immediate one.
 
 **Decision.** Pin GitHub Actions to full 40-character commit SHAs with a version
-comment; pin Docker images by tag *and* digest; pin p2 repositories to exact
+comment; pin Docker images by tag _and_ digest; pin p2 repositories to exact
 versions; install with `--frozen-lockfile` everywhere. Enforce with `zizmor`
 plus an explicit `forbidden-uses` allowlist, run CodeQL over the workflows
 themselves, and grant `permissions: {}` at workflow level with per-job
@@ -432,23 +414,5 @@ escalation. Dependabot covers npm, Maven and Actions.
 reviewable pull requests. Two gaps are known and recorded in `TODO.md`: the
 release workflow fetches `@vscode/vsce` and `ovsx` via `npx --yes` at publish
 time, unpinned and with tokens present, and `ovsx` is undeclared so Dependabot
-cannot see it; and the integration tests run against whatever VS Code is current
+cannot see it; and the integration tests run against whatever Visual Studio Code is current
 rather than a pinned version, which has already broken CI once.
-
----
-
-## ADR-0020 — READMEs describe the present; open work lives in `TODO.md`
-
-**Status:** Accepted
-
-**Context.** Task lists in READMEs rot. They are read by users looking for what
-the project *does*, but written by maintainers tracking what it *lacks*, and the
-two audiences are served badly by the same list.
-
-**Decision.** READMEs describe current state and roadmap direction only. Open
-work goes in `TODO.md`. Status lines announcing that a feature is implemented are
-removed — users assume documented features exist.
-
-**Consequences.** READMEs stay accurate for the people reading them, and stale
-checkboxes stop appearing on the marketplace listing. Cost: one more file, and
-the discipline to put items in it.

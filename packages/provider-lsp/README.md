@@ -10,13 +10,13 @@ Bundled into the `catchme` extension (not published separately).
 Most languages have a language server but no reachable semantic API. This
 provider gets useful results anyway by splitting the problem:
 
-| Half | How | Precision |
-|---|---|---|
-| Intraprocedural (find the handler in this function) | a comment/string-aware **brace scanner** (`syntax.ts`) | syntactic → `possible` |
-| Interprocedural (who calls this?) | **LSP Call Hierarchy**, driven by the core | as good as the server's index |
+| Half                                                | How                                                    | Precision                     |
+| --------------------------------------------------- | ------------------------------------------------------ | ----------------------------- |
+| Intraprocedural (find the handler in this function) | a comment/string-aware **brace scanner** (`syntax.ts`) | syntactic → `possible`        |
+| Interprocedural (who calls this?)                   | **LSP Call Hierarchy**, driven by the core             | as good as the server's index |
 
 The scanner is deliberately dependency-free rather than grammar-based: no
-per-language wasm to ship, and it works for every brace-style language at once.
+per-language Wasm to ship, and it works for every brace-style language at once.
 It can be swapped for tree-sitter later without touching the provider interface.
 
 What it does take seriously is not being fooled by text — comments and string
@@ -26,7 +26,7 @@ naive scanner gets wrong: a throw inside a `catch` or `finally` is **not**
 handled by that same `try`.
 
 The second half is the interesting one. `prepareCallHierarchy` /
-`incomingCalls` are *standard* LSP requests implemented by many servers
+`incomingCalls` are _standard_ LSP requests implemented by many servers
 (Java, C#, C/C++, Rust, TypeScript…), so the cross-function walk is genuinely
 language-neutral and lives in the core engine — not here.
 

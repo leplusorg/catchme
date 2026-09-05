@@ -7,7 +7,7 @@ not a standalone program and not a plain jar.
 
 The TypeScript extension can reach jdt.ls only through LSP, and LSP has no
 request for "give me the AST" or "resolve this type binding." Precise Java
-answers need exactly those. So this bundle is loaded *into* the language server,
+answers need exactly those. So this bundle is loaded _into_ the language server,
 where it has the full Eclipse JDT API: `ASTParser` with resolved bindings, the
 type hierarchy, the Java model, and JDT's Call Hierarchy.
 
@@ -24,7 +24,7 @@ packages/provider-java  ──'java.execute.workspaceCommand'──►  redhat.j
 ```
 
 `plugin.xml` registers an `org.eclipse.jdt.ls.core.delegateCommandHandler` for
-three command ids. **They must stay in sync** with
+three command IDs. **They must stay in sync** with
 `packages/provider-java/src/index.ts`:
 
 - `catchme.java.resolveThrowSite`
@@ -40,7 +40,7 @@ Everything returned must be plain JSON matching the model in
 cd server-java && ./mvnw -B verify        # → target/org.leplus.catchme.jdt-*.jar
 ```
 
-Or from the repo root, which also installs it where the extension expects it:
+Or from the repository root, which also installs it where the extension expects it:
 
 ```sh
 pnpm run build:server && pnpm run copy:server   # → packages/core/server/catchme.jdt.jar
@@ -51,7 +51,7 @@ because `mvnw` locates `.mvn/` by walking up from the current directory.
 
 To exercise the built bundle against a real language server — it starts jdt.ls
 as a plain Java process and drives the delegate commands over LSP, so it needs
-neither VS Code nor a display:
+neither Visual Studio Code nor a display:
 
 ```sh
 pnpm --filter catchme run test:jdtls

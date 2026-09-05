@@ -3,9 +3,9 @@
 Answer two questions that editors normally leave you guessing about:
 
 1. **Where can this exception be caught?** Right-click a `throw` and see every
-   handler it can reach — including handlers in *callers*, after it escapes the
+   handler it can reach — including handlers in _callers_, after it escapes the
    current function.
-2. **What if I threw one here?** Right-click *anywhere*, pick an exception type,
+2. **What if I threw one here?** Right-click _anywhere_, pick an exception type,
    and see where it would land. No code changes, no debugger.
 
 ## Features
@@ -50,44 +50,44 @@ lambdas, reflection, or dynamic typing. CatchMe never pretends otherwise:
   language provides no type information).
 
 A chain is rated by its **weakest hop**: one approximate step makes the whole
-route `possible`, even if the final type match is exact. A *destination*,
+route `possible`, even if the final type match is exact. A _destination_,
 though, is rated by its **best** route — reachability is a question of whether
-*any* chain gets there.
+_any_ chain gets there.
 
-A language backend without real type information is *structurally prevented*
+A language backend without real type information is _structurally prevented_
 from reporting `definite`.
 
 ## Requirements
 
-| Language | Requirement | Precision |
-|---|---|---|
-| Java | [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java), running in **Standard** mode | `definite` |
-| Others | The language's own extension, if it implements LSP Call Hierarchy | `possible` |
+| Language | Requirement                                                                                                                           | Precision  |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Java     | [Language Support for Java by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java), running in **Standard** mode | `definite` |
+| Others   | The language's own extension, if it implements LSP Call Hierarchy                                                                     | `possible` |
 
-Red Hat's Java extension is intentionally *not* a hard dependency, so non-Java
+Red Hat's Java extension is intentionally _not_ a hard dependency, so non-Java
 users can install CatchMe without it.
 
 ## Commands
 
-| Command | Where |
-|---|---|
-| CatchMe: Find Where This Is Caught | Editor context menu, on a `throw` |
-| CatchMe: Simulate Exception From Here… | Editor context menu, any supported file |
-| CatchMe: Re-run Analysis / Clear Results | Exception Flow view toolbar |
-| CatchMe: Copy Path as Stack Trace | Right-click a result, path, or destination |
-| CatchMe: Expand Further | The "depth limit reached" node |
+| Command                                  | Where                                      |
+| ---------------------------------------- | ------------------------------------------ |
+| CatchMe: Find Where This Is Caught       | Editor context menu, on a `throw`          |
+| CatchMe: Simulate Exception From Here…   | Editor context menu, any supported file    |
+| CatchMe: Re-run Analysis / Clear Results | Exception Flow view toolbar                |
+| CatchMe: Copy Path as Stack Trace        | Right-click a result, path, or destination |
+| CatchMe: Expand Further                  | The "depth limit reached" node             |
 
 ## Settings
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `catchme.analysis.maxDepth` | `8` | Interprocedural hop limit |
-| `catchme.analysis.precision` | `possible` | `definite` / `possible` / `all` |
-| `catchme.analysis.includeLibraryCode` | `false` | Follow into dependencies and stdlib |
-| `catchme.analysis.timeoutMs` | `15000` | Time budget; partial results are kept |
-| `catchme.view.autoPeek` | `true` | Peek the first handler after analysis |
-| `catchme.diagnostics.reportUncaught` | `false` | Report uncaught results in Problems |
-| `catchme.providerOverrides` | `{}` | Force a specific engine per language id |
+| Setting                               | Default    | Meaning                                 |
+| ------------------------------------- | ---------- | --------------------------------------- |
+| `catchme.analysis.maxDepth`           | `8`        | Interprocedural hop limit               |
+| `catchme.analysis.precision`          | `possible` | `definite` / `possible` / `all`         |
+| `catchme.analysis.includeLibraryCode` | `false`    | Follow into dependencies and stdlib     |
+| `catchme.analysis.timeoutMs`          | `15000`    | Time budget; partial results are kept   |
+| `catchme.view.autoPeek`               | `true`     | Peek the first handler after analysis   |
+| `catchme.diagnostics.reportUncaught`  | `false`    | Report uncaught results in Problems     |
+| `catchme.providerOverrides`           | `{}`       | Force a specific engine per language ID |
 
 ---
 
@@ -105,14 +105,14 @@ Java here, it belongs in [`provider-java`](../provider-java) instead.
 
 ## Source layout
 
-| Path | Responsibility |
-|---|---|
-| `src/extension.ts` | `activate()`: wires everything, returns the public `CatchMeApi` |
-| `src/registry/` | Provider registration, language selection, precision ranking, lazy activation of third-party provider extensions |
-| `src/engine/` | The language-agnostic interprocedural walk over LSP Call Hierarchy; depth caps, dedup, timeouts, and precision downgrading |
-| `src/commands/` | Interaction only — Quick Pick, progress, cancellation, Peek |
-| `src/ui/` | The Exception Flow tree (`TreeDataProvider`) |
-| `src/context/` | The `catchme.onThrowStatement` / `catchme.supportedLanguage` context keys that gate the menus (debounced + cached) |
+| Path               | Responsibility                                                                                                             |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `src/extension.ts` | `activate()`: wires everything, returns the public `CatchMeApi`                                                            |
+| `src/registry/`    | Provider registration, language selection, precision ranking, lazy activation of third-party provider extensions           |
+| `src/engine/`      | The language-agnostic interprocedural walk over LSP Call Hierarchy; depth caps, dedup, timeouts, and precision downgrading |
+| `src/commands/`    | Interaction only — Quick Pick, progress, cancellation, Peek                                                                |
+| `src/ui/`          | The Exception Flow tree (`TreeDataProvider`)                                                                               |
+| `src/context/`     | The `catchme.onThrowStatement` / `catchme.supportedLanguage` context keys that gate the menus (debounced + cached)         |
 
 The built-in providers are registered in `extension.ts` **through the public
 API**, exactly as a third-party extension would — dogfooding the contract.
@@ -127,5 +127,5 @@ pnpm --filter catchme package   # vsce → catchme.vsix
 `server/` holds the bundled jdt.ls analyzer jar, produced from
 [`server-java/`](../../server-java) — see [`server/README.md`](server/README.md).
 
-Press <kbd>F5</kbd> (or use the *Run Extension (with Java fixture)* launch
+Press <kbd>F5</kbd> (or use the _Run Extension (with Java fixture)_ launch
 config) to debug against [`fixtures/java`](../../fixtures/java).

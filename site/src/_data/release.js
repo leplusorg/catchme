@@ -15,7 +15,12 @@ const REPO = "leplusorg/catchme";
 const TIMEOUT_MS = 10_000;
 
 export default async function () {
-  const unavailable = { available: false, tag: null, url: null, publishedAt: null };
+  const unavailable = {
+    available: false,
+    tag: null,
+    url: null,
+    publishedAt: null,
+  };
 
   const headers = {
     accept: "application/vnd.github+json",
@@ -37,7 +42,9 @@ export default async function () {
       return unavailable;
     }
     if (!response.ok) {
-      console.warn(`[site] release lookup failed (HTTP ${response.status}) — omitting the version`);
+      console.warn(
+        `[site] release lookup failed (HTTP ${response.status}) — omitting the version`,
+      );
       return unavailable;
     }
 
@@ -49,7 +56,9 @@ export default async function () {
       publishedAt: data.published_at ?? null,
     };
   } catch (error) {
-    console.warn(`[site] release lookup errored (${error.message}) — omitting the version`);
+    console.warn(
+      `[site] release lookup errored (${error.message}) — omitting the version`,
+    );
     return unavailable;
   }
 }

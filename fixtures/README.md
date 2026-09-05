@@ -16,13 +16,13 @@ a language server to index it.
 Expectations are trailing comments on the relevant line, so a fixture is
 simultaneously readable source and a test specification:
 
-| Annotation | Meaning |
-|---|---|
-| `@throws <typeId>` | The throw site to analyse, and its type |
-| `@caught [definite\|possible]` | This line is the expected handler |
-| `@escapes` | Expected to leave the enclosing function |
-| `@uncaught` | Expected to reach a top-level boundary |
-| `@unknown` | Analysis is expected to stop here |
+| Annotation                     | Meaning                                  |
+| ------------------------------ | ---------------------------------------- |
+| `@throws <typeId>`             | The throw site to analyse, and its type  |
+| `@caught [definite\|possible]` | This line is the expected handler        |
+| `@escapes`                     | Expected to leave the enclosing function |
+| `@uncaught`                    | Expected to reach a top-level boundary   |
+| `@unknown`                     | Analysis is expected to stop here        |
 
 ## Conventions
 
@@ -44,8 +44,8 @@ the broken rule.
 
 ## Languages
 
-| Directory | Import mechanism | Notes |
-|---|---|---|
+| Directory       | Import mechanism                  | Notes                     |
+| --------------- | --------------------------------- | ------------------------- |
 | [`java/`](java) | Eclipse `.project` + `.classpath` | Six intraprocedural cases |
 
 Adding a language: create `fixtures/<lang>/`, make it importable with the least
