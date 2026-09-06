@@ -35,6 +35,9 @@ _generic_ provider parses syntax only, so it answers `possible` — and the core
 structurally prevents it from claiming otherwise. Adding a language means
 writing a provider, not touching the core.
 
+The reasoning behind this split — and behind every other significant choice,
+including what each one cost — is recorded in [ADR.md](ADR.md).
+
 ## Repository layout
 
 | Path                              | Contents                                                                |
@@ -91,6 +94,10 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 Writing a provider for a new language? Start with
 [`packages/api/README.md`](packages/api/README.md) and validate against
 [`@leplusorg/catchme-provider-testkit`](packages/testkit).
+
+Before changing something that looks odd, check [ADR.md](ADR.md) — it usually
+explains why. The record is append-only: to revisit a decision, add one that
+supersedes it rather than editing the original.
 
 ## Security
 

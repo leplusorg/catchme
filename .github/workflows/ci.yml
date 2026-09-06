@@ -52,14 +52,33 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Typecheck / lint
+      - name: Lint
         run: pnpm run lint
+
+      # Separate from `build` on purpose: the `catchme` package is bundled by
+      # esbuild, which strips types without checking them, so a type error in
+      # packages/core/src does not fail the build. `tsc --build` walks the
+      # project references and is the only thing that typechecks it.
+      - name: Typecheck
+        run: pnpm run typecheck
 
       # Every package, including `catchme`: its test script is a dependency-free
       # smoke test that loads the real bundled extension against a mock host, so
       # it needs no display and no VS Code download. The full extension-host run
       # lives in the `integration` job below.
-      - name: Unit and smoke tests
+      #
+      # `pnpm test` also compiles the workspace against both pinned
+      # @types/vscode versions — the engines.vscode floor and the newest
+      # published one from tools/vscode-types-latest — after asserting that the
+      # floor pin still equals engines.vscode, since drift between those two is
+      # what silently blocked `vsce package` once already.
+      #
+      # Both are blocking, and both versions are committed, so this cannot go
+      # red because of something published overnight. The Dependabot pull
+      # request that bumps tools/vscode-types-latest is where upstream breakage
+      # surfaces, and failing that pull request is the intended behaviour.
+      # See ADR-0019.
+      - name: Unit, smoke and editor-API tests
         run: pnpm test
 
   #############################################################

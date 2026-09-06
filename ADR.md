@@ -4,7 +4,7 @@ Decisions that shaped CatchMe, why they were made, and what they cost. Each
 entry is immutable once accepted: to change a decision, add a new record that
 supersedes the old one rather than editing history.
 
-Records 1–20 were captured retroactively on 2026-09-05, at the point the project
+Records 1–18 were captured retroactively on 2026-09-05, at the point the project
 was first published. They document decisions taken during initial development,
 so they share a date; later records should carry the date the decision was
 actually made.
@@ -416,3 +416,91 @@ release workflow fetches `@vscode/vsce` and `ovsx` via `npx --yes` at publish
 time, unpinned and with tokens present, and `ovsx` is undeclared so Dependabot
 cannot see it; and the integration tests run against whatever Visual Studio Code is current
 rather than a pinned version, which has already broken CI once.
+
+---
+
+## ADR-0019 — The editor floor is `^1.105.0`, and `@types/vscode` is pinned to it
+
+**Status:** Accepted (2026-09-06)
+
+**Context.** `engines.vscode` declared `^1.90.0` while Dependabot had walked
+`@types/vscode` up to `1.134.0`. `vsce package` refuses to build when the types
+are ahead of the engine floor, so releases were blocked outright — and until it
+was fixed, the compiler had been accepting APIs that do not exist in the oldest
+supported editor, which fails only at runtime on a user's machine.
+
+Before choosing a floor, the actual requirement was measured rather than
+guessed: every package was compiled against fourteen versions of `@types/vscode`
+from 1.44 to 1.90. The boundary is sharp — 1.55 fails, 1.56 passes. The binding
+API is `title` on `InputBoxOptions` and `QuickPickOptions`
+(`packages/core/src/commands/index.ts:188` and `:196`), absent in 1.55.0 and
+present in 1.56.0; the runner-up is `TreeItem.tooltip` accepting a
+`MarkdownString`. So the source imposes a floor of **1.56.0** and nothing higher.
+
+**Decision.** Set `engines.vscode` to `^1.105.0` and pin `@types/vscode` to
+exactly `1.105.0` in all five packages. Add a Dependabot `ignore` for
+`@types/vscode`: it is not an ordinary dependency but a declaration of which
+editor APIs the compiler will accept, and it is only correct when it equals the
+floor. The two values move together, by hand.
+
+Track the newest published version separately, in
+`tools/vscode-types-latest/package.json`, and let Dependabot manage *that*.
+Two pinned versions, with opposite update policies: the floor never moves
+automatically, the ceiling only moves automatically.
+
+**Consequences.** Packaging works again, and the compiler now enforces the floor
+instead of silently permitting APIs beyond it. Users below 1.105 cannot install,
+which is a deliberate cost: 1.105 is a tested, recent baseline, and the Java
+path depends on Red Hat's extension, which needs a modern editor regardless.
+
+Because the code only needs 1.56, there is roughly fifty releases of headroom —
+the floor can be lowered later purely by editing two version strings, with no
+source change. The measurement above is what makes that a cheap decision rather
+than an investigation.
+
+Ignoring the floor costs the automated pull request that would otherwise flag
+upstream change, so `scripts/check-vscode-api.mjs` and the second pin replace
+it together. The script compiles the workspace against a chosen `@types/vscode`
+using a `paths` redirect, mutating nothing, and answers two questions: does the
+code still build against the floor (and does the floor pin still equal
+`engines.vscode`), and does it still build against the newest published
+version.
+
+Both questions are part of `pnpm test`, not a separate job. Only one
+`@types/vscode` can be installed at a time, so an ordinary test run exercises
+whichever version happens to be in `node_modules` and is blind to the other by
+construction; a suite that claims to guard the floor has to swap the types
+itself. Making it a root script rather than a turbo task is deliberate — the
+swap is a whole-workspace operation, and it must run even when every package
+task is a cache hit.
+
+Both results are blocking, which is only defensible because both versions are
+committed. An earlier iteration resolved `latest` from the registry at run
+time; that had to be advisory on pull requests, because an upstream release
+could turn a contributor's branch red with no diff to point at, and it pushed
+the real signal into a weekly scheduled workflow that nobody owns. Pinning the
+ceiling and handing it to Dependabot removes both problems: the check is
+reproducible, a failure names a specific version, and the notification is a
+pull request with the version bump in its diff. `vscode-api.yml` was deleted
+in favour of that.
+
+The mechanism is a second manifest rather than an npm alias in the workspace,
+because Dependabot's `ignore` matches by dependency name across a whole update
+job and it resolves aliases back to the aliased-to name — an alias would be
+swallowed by the floor's `ignore`. Separate directories are what let one
+package carry two independently managed versions. `tools/` sits outside the
+`pnpm-workspace.yaml` globs, so nothing installs it and it cannot reach the
+shipped extension.
+
+This makes the canary depend on branch protection: auto-merge only holds a
+Dependabot pull request back if CI is a required check. Without that, a
+breaking bump merges itself and the warning is lost.
+
+Running inside the test suite imposes two constraints the script honours. It
+must be fast — types are staged from `node_modules` when the version already
+matches, and everything downloaded is cached under `.vscode-api-check/`, so a
+warm run costs about two seconds. And it must not fail offline: the floor never
+needs the network, and a version whose types cannot be fetched is skipped
+rather than failed, since a network error is not something the developer can
+act on. `--strict` removes that tolerance for CI, where the registry is
+expected to be reachable.

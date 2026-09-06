@@ -75,10 +75,19 @@ jobs:
       - name: Package
         run: pnpm --filter catchme run package
 
+      # `pnpm exec`, not `npx`: vsce is a devDependency of the catchme package,
+      # so this runs the version the lockfile pins. `npx --yes @vscode/vsce`
+      # would resolve whatever is latest on npm at publish time and run it with
+      # VSCE_PAT in the environment.
+      #
+      # $PWD is absolute and the shell expands it before pnpm switches into
+      # packages/core, so the artifact is named the same way here as in the
+      # ovsx and `gh release upload` steps below. A bare `catchme.vsix` would
+      # resolve against packages/core and fail.
       - name: Publish to VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx --yes @vscode/vsce publish --packagePath catchme.vsix
+        run: pnpm --filter catchme exec vsce publish --packagePath "$PWD/catchme.vsix"
 
       - name: Publish to Open VSX
         env:

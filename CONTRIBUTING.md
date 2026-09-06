@@ -26,6 +26,16 @@ request. We then kindly ask that:
 - commits must be signed (this is supported by most Git clients as
   well as the GitHub web UI, see link below).
 
+## Architecture decisions
+
+If something in the codebase looks like the wrong choice, check
+[ADR.md](/ADR.md) first — it usually records why, and what the alternative
+cost. The record is append-only: to revisit a decision, add a new entry that
+supersedes the earlier one rather than editing it.
+
+Changes that alter an architectural decision should add a record in the same
+pull request.
+
 ## Resources
 
 - [Managing commit signature verification](https://docs.github.com/en/authentication/managing-commit-signature-verification)

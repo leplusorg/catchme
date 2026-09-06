@@ -235,3 +235,7 @@ site/_site/
 .m2repo/
 # only if JDTLS_HOME is pointed inside the repo
 .jdtls/
+
+# Scratch dir for scripts/check-vscode-api.mjs (downloaded type
+# definitions and generated tsconfigs; never committed).
+.vscode-api-check/

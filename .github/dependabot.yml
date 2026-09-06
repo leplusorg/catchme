@@ -13,6 +13,37 @@ updates:
     commit-message:
       prefix: build(deps)
       prefix-development: chore(dev-deps)
+    ignore:
+      # @types/vscode is not an ordinary dependency: it declares which editor
+      # APIs the compiler will accept, so it must track engines.vscode exactly.
+      # vsce refuses to package when the types are ahead of the engine floor,
+      # and types behind it hide APIs the floor actually offers. Unattended
+      # bumps broke packaging once already (drifted to 1.134.0 against a
+      # ^1.90.0 floor). Raise both by hand, together. See ADR-0019.
+      #
+      # This ignores the *floor* only. The newest published version is tracked
+      # separately by the tools/vscode-types-latest entry below.
+      - dependency-name: "@types/vscode"
+  # The other half of the @types/vscode story: a manifest holding nothing but
+  # the newest published version, so Dependabot opens a pull request when one
+  # appears and CI compiles the workspace against it. That pull request is the
+  # early warning for upstream API breakage.
+  #
+  # It must be its own entry, not an alias in the workspace: `ignore` matches
+  # by dependency name for the whole job, and Dependabot resolves npm aliases
+  # back to the aliased-to name, so an alias would be ignored too. Separate
+  # directories are what give one package two independently managed versions.
+  # tools/ is outside the pnpm workspace globs, so nothing installs it and it
+  # cannot reach the shipped extension. See tools/vscode-types-latest/README.md.
+  - package-ecosystem: "npm"
+    directory: "/tools/vscode-types-latest/"
+    schedule:
+      interval: "daily"
+    # No cooldown here, unlike the entries around it. Everywhere else a delay
+    # avoids churn from packages that publish and immediately patch; here the
+    # publication *is* the signal, and waiting a week just delays the warning.
+    commit-message:
+      prefix: chore(dev-deps)
   # Only sees Maven-resolved artifacts, i.e. the Tycho plugins. The Eclipse
   # platform and jdt.ls bundles come from the p2 repositories declared in the
   # pom and are invisible to Dependabot — bump those URLs by hand.
