@@ -35,7 +35,12 @@ updates:
   # directories are what give one package two independently managed versions.
   # tools/ is outside the pnpm workspace globs, so nothing installs it and it
   # cannot reach the shipped extension. See tools/vscode-types-latest/README.md.
-  - package-ecosystem: "npm"
+  # The missing cooldown below is the point of this entry, so the audit is
+  # suppressed on this entry alone rather than repo-wide: every other
+  # ecosystem still gets flagged if its cooldown is dropped. The pragma has
+  # to be a trailing comment — zizmor 1.25.2, which super-linter v8.7.0
+  # ships, does not honour it on the preceding line.
+  - package-ecosystem: "npm" # zizmor: ignore[dependabot-cooldown]
     directory: "/tools/vscode-types-latest/"
     schedule:
       interval: "daily"

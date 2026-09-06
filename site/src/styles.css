@@ -59,6 +59,34 @@ a:hover {
   text-decoration-thickness: 2px;
 }
 
+/* Code lives up here with the other element rules rather than beside the
+   components that use it, and the order matters: `.version code` (hero) and
+   `.wrap-wide td code` (docs) both override these, so anything more specific
+   has to come later or stylelint's no-descending-specificity fires. */
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--ink-raised);
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+pre {
+  background: #171b28;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
 /* Visible only once focused, so keyboard users get a way past the header. */
 .skip {
   position: absolute;
@@ -331,15 +359,6 @@ dl.facts dd {
   }
 }
 
-code {
-  font-family: var(--mono);
-  font-size: 0.9em;
-  background: var(--ink-raised);
-  border: 1px solid var(--ink-line);
-  border-radius: 4px;
-  padding: 0.1em 0.35em;
-}
-
 /* ------------------------------------------------------- docs page only */
 
 /* Markdown content: the docs page is prose, so it needs table, kbd and
@@ -395,21 +414,6 @@ code {
 
 .wrap-wide li {
   margin: 0.35rem 0;
-}
-
-pre {
-  background: #171b28;
-  border: 1px solid var(--ink-line);
-  border-radius: 8px;
-  padding: 0.9rem 1.1rem;
-  overflow-x: auto;
-}
-
-pre code {
-  background: none;
-  border: 0;
-  padding: 0;
-  font-size: 0.9rem;
 }
 
 kbd {
