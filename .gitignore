@@ -239,3 +239,8 @@ site/_site/
 # Scratch dir for scripts/check-vscode-api.mjs (downloaded type
 # definitions and generated tsconfigs; never committed).
 .vscode-api-check/
+
+# Copied from the repository root by `pnpm --filter catchme run package` so
+# vsce finds a licence inside the packaged directory. Anchored with a leading
+# slash so this never matches the real /LICENSE.
+/packages/core/LICENSE

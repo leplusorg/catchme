@@ -32,7 +32,7 @@ whole workspace against it, alongside the pinned floor. Both are part of
 
 ## When Dependabot opens a pull request here
 
-That pull request *is* the early-warning signal, and CI runs the compile on it:
+That pull request _is_ the early-warning signal, and CI runs the compile on it:
 
 - **Green** — the new editor API surface is compatible. Merge it. Nothing else
   changes; the shipped extension still targets the floor.
