@@ -10,9 +10,22 @@ tsconfig.tsbuildinfo
 **/*.ts
 **/*.map
 
+# Build and test metadata. These are gitignored, so they are invisible in a
+# clean checkout and only appear in the archive after a local `turbo` run —
+# which is exactly how three log files shipped unnoticed.
+.turbo/**
+.vscode-test.mjs
+
 # Icon source; only the rendered PNG ships.
 media/marketplace-icon.svg
 
-# Explicitly kept: dist/**, server/**, media/**, package.json, README.md
-!dist/**
-!server/*.jar
+# No negations below. vsce packages everything not matched above, so dist/,
+# server/, media/, package.json and README.md ship by default and need no
+# `!` rule to keep them. The two that used to be here were misleading:
+# `!server/*.jar` never had an effect (nothing matches server/, which is why
+# server/README.md shipped alongside it), and `!dist/**` existed solely to
+# undo `**/*.map` — shipping a 108 KB source map, 2x the bundle it maps, for
+# an unminified build whose stack traces are already legible. Dropping it took
+# the archive from 75.82 KB to 46.05 KB. `--sourcemap` stays in the build
+# script: the map is still written to dist/ for local F5 debugging, it just
+# does not ship.

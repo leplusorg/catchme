@@ -444,7 +444,7 @@ editor APIs the compiler will accept, and it is only correct when it equals the
 floor. The two values move together, by hand.
 
 Track the newest published version separately, in
-`tools/vscode-types-latest/package.json`, and let Dependabot manage *that*.
+`tools/vscode-types-latest/package.json`, and let Dependabot manage _that_.
 Two pinned versions, with opposite update policies: the floor never moves
 automatically, the ceiling only moves automatically.
 
