@@ -44,7 +44,7 @@ including what each one cost — is recorded in [ADR.md](ADR.md).
 | --------------------------------- | ----------------------------------------------------------------------- |
 | [`packages/`](packages)           | The TypeScript workspace — extension, provider API, providers, test kit |
 | [`packages/api/`](packages/api)   | `@leplusorg/catchme-api` — the public provider contract                 |
-| [`packages/core/`](packages/core) | The Visual Studio Code extension itself                                            |
+| [`packages/core/`](packages/core) | The Visual Studio Code extension itself                                 |
 | [`server-java/`](server-java)     | The Eclipse JDT analyzer that runs inside jdt.ls (Maven/Tycho)          |
 | [`fixtures/`](fixtures)           | Annotated test projects, one per language                               |
 
