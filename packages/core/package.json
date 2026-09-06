@@ -1,7 +1,7 @@
 {
   "name": "catchme",
-  "displayName": "CatchMe \u2014 Exception Flow Explorer",
-  "description": "Find where a thrown exception can be caught \u2014 or simulate one from any line.",
+  "displayName": "CatchMe — Exception Flow Explorer",
+  "description": "Find where a thrown exception can be caught — or simulate one from any line.",
   "version": "1.0.0",
   "publisher": "leplusorg",
   "license": "Apache-2.0",
@@ -42,7 +42,7 @@
       },
       {
         "command": "catchme.simulateThrow",
-        "title": "Simulate Exception From Here\u2026",
+        "title": "Simulate Exception From Here…",
         "category": "CatchMe"
       },
       {
@@ -192,7 +192,7 @@
           "additionalProperties": {
             "type": "string"
           },
-          "markdownDescription": "Force a specific analysis engine per language, overriding automatic selection. Keys are language ids; values are a provider's `engine` name \u2014 e.g. `{ \"java\": \"Generic (syntactic + LSP Call Hierarchy)\" }` to bypass jdt.ls."
+          "markdownDescription": "Force a specific analysis engine per language, overriding automatic selection. Keys are language ids; values are a provider's `engine` name — e.g. `{ \"java\": \"Generic (syntactic + LSP Call Hierarchy)\" }` to bypass jdt.ls."
         }
       }
     }
