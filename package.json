@@ -2,7 +2,7 @@
   "name": "catchme-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "CatchMe \u2014 Exception Flow Explorer for Visual Studio Code (monorepo root)",
+  "description": "CatchMe — Exception Flow Explorer for Visual Studio Code (monorepo root)",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
