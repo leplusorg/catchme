@@ -181,9 +181,37 @@ const check = (name, fn) => {
 };
 
 const SRC_REL = "src/main/java/fixtures/BasicHandlers.java";
-/** 0-based line of `throw new IOException("boom");` in caughtBySupertype(). */
-const THROW_LINE = 18;
-const HANDLER_LINE = 21; // `} catch (Exception e) {`
+
+/**
+ * Positions are located by source text, never hardcoded. The fixtures are
+ * formatted by google-java-format, which has already moved them once without
+ * anyone noticing: commit 7fe6e60 reflowed a class Javadoc from five lines to
+ * three and re-indented four spaces to two, shifting every line below it up by
+ * two and every column left by two. Six of these checks failed as a result,
+ * reporting "returned null at the annotated @throws line" — which reads like a
+ * broken analyzer rather than a stale constant. Anchoring on content keeps the
+ * next reformat from doing the same thing.
+ */
+const lineContaining = (text, needle) => {
+  const line = text.split(/\r?\n/).findIndex((l) => l.includes(needle));
+  if (line === -1) {
+    throw new Error(`fixture no longer contains ${JSON.stringify(needle)}`);
+  }
+  return line;
+};
+
+/** The 0-based range covering `needle` on the single line that holds it. */
+const rangeOf = (text, needle) => {
+  const line = lineContaining(text, needle);
+  const character = text.split(/\r?\n/)[line].indexOf(needle);
+  return {
+    start: { line, character },
+    end: { line, character: character + needle.length },
+  };
+};
+
+const THROW_STMT = 'throw new IOException("boom");';
+const HANDLER_STMT = "} catch (Exception e) {";
 
 let proc;
 try {
@@ -229,19 +257,23 @@ try {
   console.log("jdt.ls is ready\n");
   await sleep(4000);
 
+  const srcText = readFileSync(path.join(FIXTURE, SRC_REL), "utf8");
+  const throwRange = rangeOf(srcText, THROW_STMT);
+  const HANDLER_LINE = lineContaining(srcText, HANDLER_STMT);
+
   lsp.notify("textDocument/didOpen", {
     textDocument: {
       uri: srcUri,
       languageId: "java",
       version: 1,
-      text: readFileSync(path.join(FIXTURE, SRC_REL), "utf8"),
+      text: srcText,
     },
   });
   await sleep(2000);
 
   const exec = (command, args) =>
     lsp.request("workspace/executeCommand", { command, arguments: args });
-  const position = { line: THROW_LINE, character: 12 };
+  const position = throwRange.start;
 
   const site = await exec("catchme.java.resolveThrowSite", [
     { uri: srcUri, position },
@@ -265,7 +297,7 @@ try {
   const flow = await exec("catchme.java.analyzeFlow", [
     {
       uri: srcUri,
-      range: { start: position, end: { line: THROW_LINE, character: 42 } },
+      range: throwRange,
       exceptionTypeId: "java.io.IOException",
       simulated: false,
       options: {
@@ -306,14 +338,17 @@ try {
   // ---- interprocedural: throw in deep(), handler two hops away in top() ----
   const propRel = "src/main/java/fixtures/Propagation.java";
   const propUri = `file://${path.join(FIXTURE, propRel)}`;
-  const PROP_THROW_LINE = 16;
+  const propText = readFileSync(path.join(FIXTURE, propRel), "utf8");
+  // Survived the same reformat only because the line happened not to move;
+  // the columns were already stale (character 8 landed mid-keyword).
+  const propThrowRange = rangeOf(propText, THROW_STMT);
 
   lsp.notify("textDocument/didOpen", {
     textDocument: {
       uri: propUri,
       languageId: "java",
       version: 1,
-      text: readFileSync(path.join(FIXTURE, propRel), "utf8"),
+      text: propText,
     },
   });
   await sleep(2000);
@@ -321,10 +356,7 @@ try {
   const chain = await exec("catchme.java.analyzeFlow", [
     {
       uri: propUri,
-      range: {
-        start: { line: PROP_THROW_LINE, character: 8 },
-        end: { line: PROP_THROW_LINE, character: 40 },
-      },
+      range: propThrowRange,
       exceptionTypeId: "java.io.IOException",
       simulated: false,
       options: {
