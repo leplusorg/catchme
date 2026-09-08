@@ -26,13 +26,64 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
   <name>CatchMe JDT Analyzer</name>
+  <url>https://github.com/leplusorg/catchme</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://github.com/leplusorg/catchme/tree/main</url>
+    <connection>scm:git:https://github.com/leplusorg/catchme.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/leplusorg/catchme.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  <organization>
+    <name>Leplus.org</name>
+    <url>https://www.leplus.org</url>
+  </organization>
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/leplusorg/catchme/issues</url>
+  </issueManagement>
+  <developers>
+    <developer>
+      <email>thomas@leplus.org</email>
+      <name>Thomas Leplus</name>
+      <url>https://www.leplus.org</url>
+      <id>leplusorg</id>
+      <roles>
+        <role>Project Lead</role>
+      </roles>
+      <organization>Leplus.org</organization>
+      <organizationUrl>https://www.leplus.org</organizationUrl>
+    </developer>
+  </developers>
 
   <properties>
-    <tycho.version>5.0.4</tycho.version>
-    <java.minVersion>21</java.minVersion>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Reproducible builds; CI overrides via the source-date-epoch profile. -->
     <project.build.outputTimestamp>2026-01-01T00:00:00Z</project.build.outputTimestamp>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <tycho.version>5.0.4</tycho.version>
+    <java.minVersion>21</java.minVersion>
+    <maven.javadoc.version>3.12.0</maven.javadoc.version>
+    <dependencyCheck.version>13.0.0</dependencyCheck.version>
+    <dependencyCheck.skip>false</dependencyCheck.skip>
+    <dependencyCheck.threshold>7</dependencyCheck.threshold>
+    <!-- Read the NVD API key from the environment so the secret is never
+         passed on the command line (visible in the process list). Can still
+         be overridden with -DdependencyCheck.NVDApiKey=... if needed. -->
+    <dependencyCheck.NVDApiKey>${env.NVD_API_KEY}</dependencyCheck.NVDApiKey>
+    <!-- Read the Sonatype OSS Index password (API token) from the environment
+         so the secret is never passed on the command line (visible in the
+         process list). Can still be overridden with
+         -DdependencyCheck.ossIndexPassword=... if needed. -->
+    <dependencyCheck.ossIndexPassword>${env.OSS_INDEX_PASSWORD}</dependencyCheck.ossIndexPassword>
+    <cyclonedx.skip>false</cyclonedx.skip>
+    <sigstore.skip>false</sigstore.skip>
   </properties>
 
   <repositories>
@@ -96,8 +147,155 @@
           <showDeprecation>true</showDeprecation>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.15.0</version>
+        <configuration>
+          <release>${java.minVersion}</release>
+          <showDeprecation>true</showDeprecation>
+          <showWarnings>true</showWarnings>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+            <arg>-Xdoclint:all</arg>
+            <arg>-Werror</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.4.0</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven.javadoc.version}</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <source>${java.minVersion}</source>
+              <show>private</show>
+              <nohelp>true</nohelp>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>${dependencyCheck.version}</version>
+        <configuration>
+          <failBuildOnCVSS>${dependencyCheck.threshold}</failBuildOnCVSS>
+          <failOnError>true</failOnError>
+          <nvdApiKey>${dependencyCheck.NVDApiKey}</nvdApiKey>
+          <ossIndexPassword>${dependencyCheck.ossIndexPassword}</ossIndexPassword>
+          <skip>${dependencyCheck.skip}</skip>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.28.0</version>
+        <configuration>
+            <printFailingErrors>true</printFailingErrors>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.10.4.0</version>
+        <configuration>
+        <effort>max</effort>
+        <threshold>Low</threshold>
+        <failOnError>true</failOnError>
+          <plugins>
+            <plugin>
+              <groupId>com.h3xstream.findsecbugs</groupId>
+              <artifactId>findsecbugs-plugin</artifactId>
+              <version>1.14.0</version>
+            </plugin>
+          </plugins>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven.javadoc.version}</version>
+        <configuration>
+          <source>${java.minVersion}</source>
+          <show>public</show>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>3.9.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>3.6.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.6.0</version>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>checkstyle</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+        <violationSeverity>info</violationSeverity>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
 
   <profiles>
     <profile>
