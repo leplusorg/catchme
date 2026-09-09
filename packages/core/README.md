@@ -22,7 +22,7 @@ Results appear in the **Exception Flow** view, grouped by **destination** —
 where the exception can end up — with the call chain that reaches each one
 underneath:
 
-```
+```text
 🔥 IOException                        2 destinations · 3 paths
   ✓ catch (IOException e)          Service.java:88 · definite
       🔥 throw IOException                Repo.java:42
@@ -91,19 +91,23 @@ users can install CatchMe without it.
 
 ---
 
-# For contributors
+## For contributors
 
 > Everything below is repo documentation. The sections above are what ships as
 > the Marketplace listing (vsce publishes this file as the extension's page).
+>
+> This is an `h2` like every other section, not a second `h1`: one file gets one
+> top-level heading, and the rule above about what ships is carried by the
+> horizontal rule and this note, not by the heading level.
 
-## The one rule
+### The one rule
 
 **No file under `src/` may import a language-specific module.** All language
 knowledge lives behind `ExceptionFlowProvider`
 ([`@leplusorg/catchme-api`](../api)). If you find yourself wanting to special-case
 Java here, it belongs in [`provider-java`](../provider-java) instead.
 
-## Source layout
+### Source layout
 
 | Path               | Responsibility                                                                                                             |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
@@ -117,7 +121,7 @@ Java here, it belongs in [`provider-java`](../provider-java) instead.
 The built-in providers are registered in `extension.ts` **through the public
 API**, exactly as a third-party extension would — dogfooding the contract.
 
-## Build
+### Build
 
 ```sh
 pnpm --filter catchme build     # esbuild bundle → dist/extension.js

@@ -17,7 +17,7 @@ toolchain.
 
 ## Dependency edges
 
-```
+```text
         ┌─────────────┐
         │     api     │   ← the only thing providers may depend on
         └──────┬──────┘
@@ -45,7 +45,7 @@ would quietly lose the guarantee.
 Enforced by `turbo.json` (`dependsOn: ["^build"]`) and by TypeScript project
 references in each `tsconfig.json`:
 
-```
+```text
 api → { provider-lsp, provider-java, testkit } → core
 ```
 

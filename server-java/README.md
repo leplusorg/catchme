@@ -16,7 +16,7 @@ deliberately isolated from the pnpm workspace next door.
 
 ## How it is reached
 
-```
+```text
 packages/provider-java  ──'java.execute.workspaceCommand'──►  redhat.java
                                                                   │
                                                                   ▼

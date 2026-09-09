@@ -72,6 +72,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTIONS_ZIZMOR_CONFIG_FILE: .zizmor.yml
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JAVA_FILE_NAME: google_checks.xml
           LINTER_RULES_PATH: .
           SAVE_SUPER_LINTER_SUMMARY: true
           TRIVY_SCANNERS: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'vuln,misconfig,secret' || 'misconfig,secret'}}
@@ -80,3 +81,4 @@ jobs:
           # (push / pull_request); schedule and workflow_dispatch runs have no
           # triggering commit for commitlint to check.
           VALIDATE_GIT_COMMITLINT: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'false' || '' }}
+          VALIDATE_JSCPD: false

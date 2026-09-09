@@ -5,6 +5,17 @@ title: Documentation
 description: How to install and use CatchMe — the commands, the settings, how to read a result, and what to do when it does not behave.
 ---
 
+{#
+markdownlint counts a front matter `title:` as the document's h1 and then
+reports the real heading below as a second one (MD025). It is not: base.njk
+renders `title` into `<title>` and og:title only, never into the page body,
+so `# Documentation` is the only h1 this page has. Clearing the pattern says
+"front matter titles are not headings here" rather than switching MD025 off,
+so a genuine second `#` would still be caught. Note the closing delimiter:
+a `#}` alone at column 1 is read as an ATX heading by markdownlint. #}
+
+<!-- markdownlint-configure-file { "MD025": { "front_matter_title": "" } } -->
+
 <section>
 <div class="wrap-wide">
 
@@ -19,7 +30,7 @@ time, so they cannot drift from what ships.
 From inside Visual Studio Code, open the Extensions view and search for **CatchMe**, or run
 this from the Command Palette (<kbd>Ctrl/Cmd</kbd>+<kbd>P</kbd>):
 
-```
+```text
 ext install {{ extension.id }}
 ```
 
@@ -110,20 +121,40 @@ node. Set `catchme.analysis.includeLibraryCode` to follow into dependencies.
 
 ## Commands
 
-| Command                                             | Where         |
-| --------------------------------------------------- | ------------- |
-| {% for c in extension.commands -%}                  |
-| {{ c.title }}                                       | {{ c.where }} |
-| {% endfor %}                                        |
-| All are available from the Command Palette as well. |
+{#
+Raw HTML rather than a markdown table, here and under Settings, because a
+Nunjucks loop cannot live inside one. GFM reads every line between the
+delimiter row and the next blank line as a table row, so `{% for %}` and
+`{% endfor %}` were each parsed as a one-cell row and rendered as an empty
+`<tr>` — the built page had a blank row before every command. markdownlint
+flagged exactly those lines (MD056, "too few cells"); it was pointing at a
+real defect, not at template syntax it failed to understand. #}
+
+<table>
+  <thead>
+    <tr><th>Command</th><th>Where</th></tr>
+  </thead>
+  <tbody>
+  {%- for c in extension.commands %}
+    <tr><td>{{ c.title }}</td><td>{{ c.where }}</td></tr>
+  {%- endfor %}
+  </tbody>
+</table>
+
+All are available from the Command Palette as well.
 
 ## Settings
 
-| Setting                            | Default           | Meaning             |
-| ---------------------------------- | ----------------- | ------------------- |
-| {% for s in extension.settings -%} |
-| `{{ s.id }}`                       | `{{ s.default }}` | {{ s.description }} |
-| {% endfor %}                       |
+<table>
+  <thead>
+    <tr><th>Setting</th><th>Default</th><th>Meaning</th></tr>
+  </thead>
+  <tbody>
+  {%- for s in extension.settings %}
+    <tr><td><code>{{ s.id }}</code></td><td><code>{{ s.default }}</code></td><td>{{ s.description | mdInline | safe }}</td></tr>
+  {%- endfor %}
+  </tbody>
+</table>
 
 ## Troubleshooting
 

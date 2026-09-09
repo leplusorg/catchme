@@ -19,7 +19,7 @@ approach can supply.
 
 ## The bridge
 
-```
+```text
 JavaProvider (this package)
    └─ vscode.commands.executeCommand('java.execute.workspaceCommand', <id>, payload)
         └─ redhat.java

@@ -50,8 +50,9 @@ export default function () {
         default: stringify(schema.default),
         description:
           schema.description ??
-          // markdownDescription can contain backticks and links; the table cell
-          // renders it as Markdown, so pass it through untouched.
+          // markdownDescription can contain backticks and links; pass it
+          // through untouched and let the `mdInline` filter in
+          // eleventy.config.js render (and escape) it at the point of use.
           schema.markdownDescription ??
           "",
       }),
