@@ -76,6 +76,11 @@ jobs:
           LINTER_RULES_PATH: .
           SAVE_SUPER_LINTER_SUMMARY: true
           TRIVY_SCANNERS: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'vuln,misconfig,secret' || 'misconfig,secret'}}
+          # super-linter resolves this to LINTER_RULES_PATH/eslint.config.mjs by
+          # default and would not find the dotted name, silently falling back to
+          # its own bundled ruleset. Named explicitly, as .biome.json and
+          # .zizmor.yml are above.
+          TYPESCRIPT_ES_CONFIG_FILE: .eslint.config.mjs
           VALIDATE_ALL_CODEBASE: true
           # Only lint commit messages when the run was triggered by a commit
           # (push / pull_request); schedule and workflow_dispatch runs have no
