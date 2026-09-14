@@ -5,6 +5,6 @@
   "description": "Version marker: the newest @types/vscode the workspace is compiled against. Never installed; deliberately outside the pnpm workspace. See README.md.",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/vscode": "1.136.0"
+    "@types/vscode": "1.137.0"
   }
 }
