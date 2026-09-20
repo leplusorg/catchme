@@ -51,4 +51,25 @@ export default [
       ],
     },
   },
+  {
+    /*
+     * Last block wins in flat config, so this turns the base rule back off for
+     * TypeScript, leaving @typescript-eslint/no-unused-vars above as the only
+     * one running there. typescript-eslint documents that as a requirement,
+     * not a preference: the base rule sees TypeScript-only syntax as plain
+     * parameters and cannot tell that they are used.
+     *
+     * Both shapes it gets wrong are here. `constructor(private readonly
+     * registry: ProviderRegistry) {}` declares a parameter *property* - the
+     * name is the field, read as `this.registry` throughout the class, so
+     * renaming it to `_registry` would rename the field and break every use.
+     * And every method on an interface (`ExceptionFlowProvider`, `CatchMeApi`,
+     * `FlowProgress`) is a declaration with no body, where a parameter name
+     * can never be "used" by construction; it is there to say what the core
+     * hands an implementation. Underscoring those would report unused
+     * parameters to every provider author reading the API.
+     */
+    files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+    rules: { "no-unused-vars": "off" },
+  },
 ];
