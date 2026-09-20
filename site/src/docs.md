@@ -11,8 +11,11 @@ reports the real heading below as a second one (MD025). It is not: base.njk
 renders `title` into `<title>` and og:title only, never into the page body,
 so `# Documentation` is the only h1 this page has. Clearing the pattern says
 "front matter titles are not headings here" rather than switching MD025 off,
-so a genuine second `#` would still be caught. Note the closing delimiter:
-a `#}` alone at column 1 is read as an ATX heading by markdownlint. #}
+so a genuine second `#` would still be caught. The closing delimiter rides
+at the end of this line deliberately: on its own line it would start with a
+`#`, which markdownlint reads as an ATX heading. It also cannot be quoted in
+prose anywhere above - Nunjucks closes the comment at the first one it sees,
+backticks and all, and the leftover terminator then fails the build. #}
 
 <!-- markdownlint-configure-file { "MD025": { "front_matter_title": "" } } -->
 
