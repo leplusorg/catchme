@@ -65,8 +65,28 @@ jobs:
 
       # Released builds MUST embed the analyzer jar, otherwise Java support is
       # silently dead in the published extension.
+      #
+      # This is the one build whose dependency-check run cannot be skipped:
+      # whatever the jar carries is about to reach users, and the pom's
+      # skip-without-a-key default would publish it unscanned without
+      # comment. So the key is required here rather than merely used. The
+      # release triggers are tag and dispatch, both on the default branch, so
+      # the secret is always available - nothing fails here that would not
+      # also have failed on `main`.
       - name: Build analyzer bundle
-        run: pnpm run build:server && pnpm run copy:server
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${NVD_API_KEY:-}" ]; then
+            echo "::error::NVD_API_KEY is not set: this release would ship an analyzer jar whose dependencies were never scanned."
+            echo "Add it as a repository secret; a key is free from" >&2
+            echo "https://nvd.nist.gov/developers/request-an-api-key" >&2
+            exit 1
+          fi
+          pnpm run build:server
+          pnpm run copy:server
 
       - name: Build
         run: pnpm run build

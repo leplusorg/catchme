@@ -124,14 +124,19 @@ test:integration`). They last passed before the call-chain work landed.
 
 ## Housekeeping
 
-- [ ] **Add an `NVD_API_KEY` repository secret** to turn the dependency-check
-      scan back on. It is skipped by default because the NVD API rejects an
-      empty key and throttles keyless callers too hard to populate the cache,
-      so the scan was failing the whole Java build rather than reporting
-      anything. `server-java/pom.xml` enables it automatically once the key is
-      in the environment; the key is free from
-      <https://nvd.nist.gov/developers/request-an-api-key>. Until then nothing
-      is scanning the analyzer's dependencies for known vulnerabilities.
+- [ ] **Add an `NVD_API_KEY` repository secret.** Until it exists the
+      `Build analyzer bundle` step fails on purpose, in both `ci.yml` and
+      `release.yml` — a release must not ship a jar nothing scanned. Without a key
+      `server-java/pom.xml` skips the dependency-check scan, and a skipped scan
+      is indistinguishable from a clean one once the job is green, so CI would
+      be vouching for dependencies nobody looked at. The key is free from
+      <https://nvd.nist.gov/developers/request-an-api-key>; the pom's
+      `nvd-api-key` profile picks it up from the environment automatically.
+      Add it as a **Dependabot** secret as well — that is a separate store, and
+      Dependabot's pull requests hit the same guard without it. Pull requests
+      from forks cannot be given the secret at all and will fail this step;
+      if that ever becomes a real workflow, gate the guard on
+      `github.event.pull_request.head.repo.fork`.
 - [ ] **Narrow the super-linter prose rules.** The `ci(super-linter): linting`
       pass rewrote link text (`[README]` → `[Readme]`), expanded "Visual Studio Code" to
       "Visual Studio Code" inside product names, and broke a continuation indent

@@ -81,7 +81,13 @@
          is the honest default - a scan that cannot fetch data proves nothing,
          and failOnError below would otherwise break every build that has no
          key. Get one (free) at https://nvd.nist.gov/developers/request-an-api-key
-         and see the profile for how to supply it. -->
+         and see the profile for how to supply it.
+
+         This default is for humans, not for CI. Skipping is fine on a laptop,
+         where whoever ran the build knows what they got; it is not fine in a
+         pipeline, where a skipped scan and a clean one are the same shade of
+         green. So ci.yml refuses to build at all without the key rather than
+         relying on this. -->
     <dependencyCheck.skip>true</dependencyCheck.skip>
     <!-- Empty on purpose, and only ever read when the scan is skipped: the
          profiles below supply the real values from the environment. An empty

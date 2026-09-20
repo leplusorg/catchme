@@ -118,14 +118,28 @@ jobs:
       # NVD_API_KEY gates the dependency-check scan (see the nvd-api-key
       # profile in server-java/pom.xml). Passing it as an environment variable
       # keeps it out of the command line and therefore out of the process
-      # list. If the secret is not configured this expands to the empty
-      # string, which Maven reads as absent, so the scan skips rather than
-      # failing - the same path a fork takes, since secrets are not exposed to
-      # pull requests from forks.
+      # list.
+      #
+      # Without it the pom skips the scan, which is the right default for a
+      # local build but the wrong one here: a skipped scan and a clean scan
+      # look identical in a green job, so CI would vouch for dependencies it
+      # never looked at. The guard makes that state loud instead. Note that an
+      # unconfigured secret and a withheld one both expand to the empty
+      # string, so this also fires on pull requests from forks and on
+      # Dependabot's runs, which read a separate secret store.
       - name: Build analyzer bundle
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: mvn -B -ntp -f server-java/pom.xml verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${NVD_API_KEY:-}" ]; then
+            echo "::error::NVD_API_KEY is not set, so dependency-check would be skipped and nothing scanned."
+            echo "Add it as a repository secret, and again as a Dependabot secret (a separate store)." >&2
+            echo "A key is free from https://nvd.nist.gov/developers/request-an-api-key" >&2
+            exit 1
+          fi
+          mvn -B -ntp -f server-java/pom.xml verify
 
       - name: Upload analyzer jar
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -184,8 +198,18 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # This job wants the jar, not a security report, and `build:server` runs
+      # the same `verify` as the build job above - so dependency-check is
+      # skipped here explicitly rather than scanning the same dependencies
+      # twice per pipeline. Explicit is the operative word: the flag is
+      # visible in the run, unlike the pom's default, which would skip the
+      # scan without saying so. The flag goes on the command line because it
+      # must not apply to `pnpm run build:server` on a developer's machine,
+      # where the scan should run if they have a key.
       - name: Build analyzer bundle
-        run: pnpm run build:server && pnpm run copy:server
+        run: |
+          pnpm run build:server -- -DdependencyCheck.skip=true
+          pnpm run copy:server
 
       - name: Run jdt.ls integration test
         env:
