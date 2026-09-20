@@ -114,7 +114,17 @@ jobs:
 
       # Invoked as `mvn` rather than `./mvnw` so this works whether or not the
       # Maven wrapper has been committed to server-java/.
+      #
+      # NVD_API_KEY gates the dependency-check scan (see the nvd-api-key
+      # profile in server-java/pom.xml). Passing it as an environment variable
+      # keeps it out of the command line and therefore out of the process
+      # list. If the secret is not configured this expands to the empty
+      # string, which Maven reads as absent, so the scan skips rather than
+      # failing - the same path a fork takes, since secrets are not exposed to
+      # pull requests from forks.
       - name: Build analyzer bundle
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: mvn -B -ntp -f server-java/pom.xml verify
 
       - name: Upload analyzer jar

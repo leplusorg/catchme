@@ -124,6 +124,14 @@ test:integration`). They last passed before the call-chain work landed.
 
 ## Housekeeping
 
+- [ ] **Add an `NVD_API_KEY` repository secret** to turn the dependency-check
+      scan back on. It is skipped by default because the NVD API rejects an
+      empty key and throttles keyless callers too hard to populate the cache,
+      so the scan was failing the whole Java build rather than reporting
+      anything. `server-java/pom.xml` enables it automatically once the key is
+      in the environment; the key is free from
+      <https://nvd.nist.gov/developers/request-an-api-key>. Until then nothing
+      is scanning the analyzer's dependencies for known vulnerabilities.
 - [ ] **Narrow the super-linter prose rules.** The `ci(super-linter): linting`
       pass rewrote link text (`[README]` → `[Readme]`), expanded "Visual Studio Code" to
       "Visual Studio Code" inside product names, and broke a continuation indent

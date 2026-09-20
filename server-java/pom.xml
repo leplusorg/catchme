@@ -71,17 +71,24 @@
     <java.minVersion>21</java.minVersion>
     <maven.javadoc.version>3.12.0</maven.javadoc.version>
     <dependencyCheck.version>13.0.0</dependencyCheck.version>
-    <dependencyCheck.skip>false</dependencyCheck.skip>
     <dependencyCheck.threshold>7</dependencyCheck.threshold>
-    <!-- Read the NVD API key from the environment so the secret is never
-         passed on the command line (visible in the process list). Can still
-         be overridden with -DdependencyCheck.NVDApiKey=... if needed. -->
-    <dependencyCheck.NVDApiKey>${env.NVD_API_KEY}</dependencyCheck.NVDApiKey>
-    <!-- Read the Sonatype OSS Index password (API token) from the environment
-         so the secret is never passed on the command line (visible in the
-         process list). Can still be overridden with
-         -DdependencyCheck.ossIndexPassword=... if needed. -->
-    <dependencyCheck.ossIndexPassword>${env.OSS_INDEX_PASSWORD}</dependencyCheck.ossIndexPassword>
+    <!-- Off unless an NVD API key reaches the build; the nvd-api-key profile
+         below turns it on. The scan genuinely cannot run without one: the NVD
+         API rejects an empty key outright rather than falling back to
+         anonymous access ("Invalid API Key, length of 0 too short"), and
+         keyless access is throttled to 5 requests per rolling 30s, which is
+         far too slow to populate the vulnerability cache from cold. Skipping
+         is the honest default - a scan that cannot fetch data proves nothing,
+         and failOnError below would otherwise break every build that has no
+         key. Get one (free) at https://nvd.nist.gov/developers/request-an-api-key
+         and see the profile for how to supply it. -->
+    <dependencyCheck.skip>true</dependencyCheck.skip>
+    <!-- Empty on purpose, and only ever read when the scan is skipped: the
+         profiles below supply the real values from the environment. An empty
+         key is worse than no key at all, which is what the NVD error above
+         was - so nothing here ever hands the plugin a blank credential. -->
+    <dependencyCheck.NVDApiKey></dependencyCheck.NVDApiKey>
+    <dependencyCheck.ossIndexPassword></dependencyCheck.ossIndexPassword>
     <cyclonedx.skip>false</cyclonedx.skip>
     <sigstore.skip>false</sigstore.skip>
   </properties>
@@ -305,6 +312,43 @@
       </activation>
       <properties>
         <project.build.outputTimestamp>${env.SOURCE_DATE_EPOCH}</project.build.outputTimestamp>
+      </properties>
+    </profile>
+    <!-- Enables the dependency-check scan, reading the key from the
+         environment so the secret is never passed on the command line, where
+         the process list would show it.
+
+         Activation is by presence rather than value, and the empty case is
+         the point: Maven activates a valueless <property> only when the
+         property is non-empty, and GitHub Actions expands an unconfigured
+         `${{ secrets.NVD_API_KEY }}` to the empty string. So a fork, or a
+         repository where the secret was never added, leaves the scan off
+         instead of failing the build with a blank credential.
+
+         To run it locally: NVD_API_KEY=... mvn verify. To force it on with
+         the key supplied some other way (a settings.xml server entry, say):
+         -DdependencyCheck.skip=false. -->
+    <profile>
+      <id>nvd-api-key</id>
+      <activation>
+        <property><name>env.NVD_API_KEY</name></property>
+      </activation>
+      <properties>
+        <dependencyCheck.skip>false</dependencyCheck.skip>
+        <dependencyCheck.NVDApiKey>${env.NVD_API_KEY}</dependencyCheck.NVDApiKey>
+      </properties>
+    </profile>
+    <!-- Sonatype OSS Index credentials, on the same terms. Independent of the
+         profile above because OSS Index is a separate analyzer: it only raises
+         the anonymous rate limit, so leaving this unset degrades the scan
+         rather than disabling it. -->
+    <profile>
+      <id>oss-index-password</id>
+      <activation>
+        <property><name>env.OSS_INDEX_PASSWORD</name></property>
+      </activation>
+      <properties>
+        <dependencyCheck.ossIndexPassword>${env.OSS_INDEX_PASSWORD}</dependencyCheck.ossIndexPassword>
       </properties>
     </profile>
   </profiles>
