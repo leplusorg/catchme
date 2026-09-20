@@ -47,11 +47,22 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
+      # No pnpm store cache on purpose. This workflow also runs on
+      # `release: published`, and a cache is writable from any branch while
+      # still being restorable here - so it is an unsigned input to the bytes
+      # deployed to Pages (zizmor's cache-poisoning audit). The site is small
+      # and this runs rarely; a cold install costs seconds.
+      #
+      # `package-manager-cache: false` rather than just dropping `cache:`.
+      # setup-node v5+ auto-caches when package.json's `packageManager` names
+      # npm - it is pnpm here, so that path never fires - but zizmor does not
+      # read package.json and treats the omitted input as caching-on. This is
+      # the opt-out the action and the audit both understand.
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 20
-          cache: pnpm
+          package-manager-cache: false
 
       - name: Install
         run: pnpm install --frozen-lockfile

@@ -89,7 +89,11 @@ class Disposable {
     if (this._fn) this._fn();
   }
   static from(...d) {
-    return new Disposable(() => d.forEach((x) => x.dispose && x.dispose()));
+    return new Disposable(() =>
+      d.forEach((x) => {
+        if (x.dispose) x.dispose();
+      }),
+    );
   }
 }
 class EventEmitter {
@@ -106,7 +110,9 @@ class EventEmitter {
     };
   }
   fire(v) {
-    this._ls.slice().forEach((l) => l(v));
+    this._ls.slice().forEach((l) => {
+      l(v);
+    });
   }
   dispose() {
     this._ls.length = 0;
@@ -192,7 +198,7 @@ const window = {
     const v = {
       id,
       opts,
-      treeDataProvider: opts && opts.treeDataProvider,
+      treeDataProvider: opts?.treeDataProvider,
       dispose() {},
     };
     state.treeViews.push(v);
@@ -254,7 +260,7 @@ const workspace = {
   async openTextDocument(uri) {
     const key = typeof uri === "string" ? uri : uri.toString();
     const doc = state.documents.get(key);
-    if (!doc) throw new Error("no mock document for " + key);
+    if (!doc) throw new Error(`no mock document for ${key}`);
     return doc;
   },
   onDidChangeTextDocument() {

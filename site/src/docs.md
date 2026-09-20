@@ -122,9 +122,9 @@ node. Set `catchme.analysis.includeLibraryCode` to follow into dependencies.
 ## Commands
 
 {#
-Raw HTML rather than a markdown table, here and under Settings, because a
+Raw HTML rather than a Markdown table, here and under Settings, because a
 Nunjucks loop cannot live inside one. GFM reads every line between the
-delimiter row and the next blank line as a table row, so `{% for %}` and
+delimiter row and the next empty line as a table row, so `{% for %}` and
 `{% endfor %}` were each parsed as a one-cell row and rendered as an empty
 `<tr>` — the built page had a blank row before every command. markdownlint
 flagged exactly those lines (MD056, "too few cells"); it was pointing at a

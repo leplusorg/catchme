@@ -23,10 +23,10 @@ let fail = 0;
 const check = (name, fn) => {
   try {
     fn();
-    console.log("  ok   " + name);
+    console.log(`  ok   ${name}`);
     pass++;
   } catch (e) {
-    console.log("  FAIL " + name + " -> " + e.message);
+    console.log(`  FAIL ${name} -> ${e.message}`);
     fail++;
   }
 };
@@ -54,7 +54,7 @@ check("renders an index page", () => assert.ok(html.length > 0));
 
 check("ships no JavaScript", () => {
   const js = files.filter((f) => f.endsWith(".js") || f.endsWith(".mjs"));
-  assert.deepStrictEqual(js, [], "unexpected JS: " + js.join(", "));
+  assert.deepStrictEqual(js, [], `unexpected JS: ${js.join(", ")}`);
   for (const f of html) {
     assert.ok(
       !/<script/i.test(readFileSync(f, "utf8")),
@@ -93,7 +93,7 @@ check("loads no third-party assets", () => {
   assert.deepStrictEqual(
     offenders,
     [],
-    "remote assets: " + offenders.join(", "),
+    `remote assets: ${offenders.join(", ")}`,
   );
 });
 
@@ -112,7 +112,7 @@ check("prefixes every internal asset path with the base path", () => {
   assert.deepStrictEqual(
     bare,
     [],
-    "paths missing the /catchme/ prefix: " + bare.join(", "),
+    `paths missing the /catchme/ prefix: ${bare.join(", ")}`,
   );
 });
 
@@ -150,7 +150,7 @@ check("routes contributors to the repo, tracker and policies", () => {
   assert.deepStrictEqual(
     missing,
     [],
-    "homepage does not link to: " + missing.join(", "),
+    `homepage does not link to: ${missing.join(", ")}`,
   );
 });
 
@@ -190,7 +190,7 @@ check("docs page documents every command and setting in the manifest", () => {
   assert.deepStrictEqual(
     missing,
     [],
-    "docs page is missing: " + missing.join(", "),
+    `docs page is missing: ${missing.join(", ")}`,
   );
 });
 

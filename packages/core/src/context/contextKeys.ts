@@ -92,7 +92,9 @@ export class ContextKeyManager implements vscode.Disposable {
   dispose(): void {
     if (this.timer) clearTimeout(this.timer);
     this.inFlight?.cancel();
-    this.disposables.forEach((d) => d.dispose());
+    this.disposables.forEach((d) => {
+      d.dispose();
+    });
   }
 }
 

@@ -459,7 +459,8 @@ function iconFor(kind: Sink["kind"], confidence: Confidence): vscode.ThemeIcon {
       return new vscode.ThemeIcon("arrow-up");
     case "uncaught":
       return new vscode.ThemeIcon("error");
-    case "unknown":
+    // "unknown", plus any kind a third-party provider invents: SinkKind is a
+    // closed union to us but not to them.
     default:
       return new vscode.ThemeIcon("circle-slash");
   }

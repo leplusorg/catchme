@@ -10,8 +10,8 @@
  * It needs no dependencies and no display, so it runs anywhere.
  */
 const assert = require("node:assert");
-const Module = require("module");
-const path = require("path");
+const Module = require("node:module");
+const path = require("node:path");
 
 const vscode = require(path.join(__dirname, "mock-vscode.cjs"));
 const orig = Module._load;
@@ -37,20 +37,20 @@ let fail = 0;
 const check = (name, fn) => {
   try {
     fn();
-    console.log("  ok   " + name);
+    console.log(`  ok   ${name}`);
     pass++;
   } catch (e) {
-    console.log("  FAIL " + name + " -> " + e.message);
+    console.log(`  FAIL ${name} -> ${e.message}`);
     fail++;
   }
 };
 const acheck = async (name, fn) => {
   try {
     await fn();
-    console.log("  ok   " + name);
+    console.log(`  ok   ${name}`);
     pass++;
   } catch (e) {
-    console.log("  FAIL " + name + " -> " + e.message);
+    console.log(`  FAIL ${name} -> ${e.message}`);
     fail++;
   }
 };
@@ -71,7 +71,7 @@ const caps = (over) =>
 const sink = (kind, uri, line, confidence) => ({
   kind,
   location: new vscode.Location(uri, new vscode.Range(line, 0, line, 1)),
-  label: kind + "@" + line,
+  label: `${kind}@${line}`,
   confidence: confidence || "definite",
 });
 
@@ -100,7 +100,7 @@ const OPTIONS = {
       "catchme.rerun",
       "catchme.clear",
     ])
-      assert.ok(S.commands.has(id), "missing " + id);
+      assert.ok(S.commands.has(id), `missing ${id}`);
   });
   check("Exception Flow tree view created", () => {
     assert.ok(S.treeViews.some((v) => v.id === "catchme.flowView"));
@@ -266,7 +266,7 @@ const OPTIONS = {
 
   console.log("\ntree rendering: call chain between origin and destination");
   const view = S.treeViews.find((v) => v.id === "catchme.flowView");
-  const tree = view && view.treeDataProvider;
+  const tree = view?.treeDataProvider;
   check("tree data provider was supplied to the view", () => assert.ok(tree));
 
   // A workspace-backed document, so escaping frames are not folded as library.
@@ -335,13 +335,13 @@ const OPTIONS = {
       assert.strictEqual(
         dests.length,
         1,
-        "expected 1 destination, got " + dests.length,
+        `expected 1 destination, got ${dests.length}`,
       );
       const item = await tree.getTreeItem(dests[0]);
       assert.strictEqual(item.label, "catch (Boom e)");
       assert.ok(
         String(item.description).includes("Main.java:89"),
-        "description=" + item.description,
+        `description=${item.description}`,
       );
     },
   );
@@ -354,7 +354,7 @@ const OPTIONS = {
       const kids = await tree.getChildren(dests[0]);
       assert.strictEqual(kids.length, 2, "expected 2 path nodes");
       const item = await tree.getTreeItem(kids[1]);
-      assert.ok(String(item.label).startsWith("via "), "label=" + item.label);
+      assert.ok(String(item.label).startsWith("via "), `label=${item.label}`);
       assert.ok(
         String(item.label).includes("→"),
         "chain label should join frames with arrows",
@@ -372,7 +372,7 @@ const OPTIONS = {
       !String(first.label).startsWith("via "),
       "expected rows, got a path node",
     );
-    assert.ok(String(first.label).includes("throw"), "label=" + first.label);
+    assert.ok(String(first.label).includes("throw"), `label=${first.label}`);
   });
 
   await acheck("the chain starts at the throw origin", async () => {
@@ -392,7 +392,7 @@ const OPTIONS = {
     const hopItem = await tree.getTreeItem(rows[1]);
     assert.ok(
       String(hopItem.description).includes("called at Main.java:72"),
-      "description=" + hopItem.description,
+      `description=${hopItem.description}`,
     );
     assert.strictEqual(hopItem.command.command, "vscode.open");
     assert.strictEqual(
@@ -415,7 +415,7 @@ const OPTIONS = {
     const item = await tree.getTreeItem(dests[0]);
     assert.ok(
       String(item.description).includes("possible"),
-      "description=" + item.description,
+      `description=${item.description}`,
     );
   });
 
@@ -430,7 +430,7 @@ const OPTIONS = {
     const item = await tree.getTreeItem(dests[0]);
     assert.ok(
       String(item.description).includes("definite"),
-      "description=" + item.description,
+      `description=${item.description}`,
     );
   });
 
@@ -448,7 +448,7 @@ const OPTIONS = {
       const item = await tree.getTreeItem(dests[0]);
       assert.ok(
         String(item.label).includes("unresolved"),
-        "label=" + item.label,
+        `label=${item.label}`,
       );
     },
   );
@@ -460,7 +460,7 @@ const OPTIONS = {
     const last = await tree.getTreeItem(rows[rows.length - 1]);
     assert.ok(
       String(last.label).includes("expand further"),
-      "label=" + last.label,
+      `label=${last.label}`,
     );
     assert.strictEqual(last.command.command, "catchme.expandPath");
     assert.strictEqual(
@@ -494,7 +494,7 @@ const OPTIONS = {
     });
     await S.commands.get("catchme.expandPath")(4);
     reg.dispose();
-    assert.ok(seenDepth >= 8, "expected a deeper cap, got " + seenDepth);
+    assert.ok(seenDepth >= 8, `expected a deeper cap, got ${seenDepth}`);
   });
 
   console.log("\nlibrary folding and copy");
@@ -518,10 +518,10 @@ const OPTIONS = {
     const rows = await tree.getChildren(dests[0]);
     const folded = await Promise.all(rows.map((r) => tree.getTreeItem(r)));
     const lib = folded.find((i) => String(i.label).includes("library frame"));
-    assert.ok(lib, "no folded node: " + folded.map((i) => i.label).join(" | "));
+    assert.ok(lib, `no folded node: ${folded.map((i) => i.label).join(" | ")}`);
     assert.ok(
       String(lib.label).includes("2"),
-      "should report the count: " + lib.label,
+      `should report the count: ${lib.label}`,
     );
   });
 
@@ -532,11 +532,11 @@ const OPTIONS = {
       const dests = await tree.getChildren(roots[0]);
       await S.commands.get("catchme.copyPath")(dests[0]);
       const text = await vscode.env.clipboard.readText();
-      assert.ok(text.includes("Boom"), "missing exception: " + text);
+      assert.ok(text.includes("Boom"), `missing exception: ${text}`);
       assert.ok(text.includes("thrown at"), "missing origin line");
       assert.ok(
         text.includes("called at Main.java:72"),
-        "missing call site: " + text,
+        `missing call site: ${text}`,
       );
     },
   );
@@ -620,11 +620,11 @@ const OPTIONS = {
 
   check("every menu entry points at a declared command", () => {
     for (const id of menuCommands)
-      assert.ok(declared.has(id), "menu references undeclared command " + id);
+      assert.ok(declared.has(id), `menu references undeclared command ${id}`);
   });
   check("every declared command is registered at runtime", () => {
     for (const id of declared)
-      assert.ok(S.commands.has(id), "declared but not registered: " + id);
+      assert.ok(S.commands.has(id), `declared but not registered: ${id}`);
   });
   // Closes the loop on menu visibility: the keys the manifest gates on are
   // exactly the keys the extension was observed setting above.
@@ -643,7 +643,7 @@ const OPTIONS = {
     for (const k of keys)
       assert.ok(
         S.contextKeys.has(k),
-        "when-clause gates on " + k + " which the extension never sets",
+        `when-clause gates on ${k} which the extension never sets`,
       );
   });
   // This README *is* the Marketplace listing, so a setting missing from it is
@@ -659,7 +659,7 @@ const OPTIONS = {
     assert.deepStrictEqual(
       undocumented,
       [],
-      "undocumented settings: " + undocumented.join(", "),
+      `undocumented settings: ${undocumented.join(", ")}`,
     );
   });
 
@@ -670,7 +670,7 @@ const OPTIONS = {
     assert.deepStrictEqual(
       undocumented,
       [],
-      "undocumented commands: " + undocumented.join(", "),
+      `undocumented commands: ${undocumented.join(", ")}`,
     );
   });
 
@@ -681,7 +681,7 @@ const OPTIONS = {
     for (const id of ids)
       assert.ok(
         S.treeViews.some((v) => v.id === id),
-        "view not created: " + id,
+        `view not created: ${id}`,
       );
   });
 
@@ -728,10 +728,10 @@ const OPTIONS = {
     await renderUncaught();
     assert.strictEqual(S.diagnostics.size, 1);
     const [diag] = [...S.diagnostics.values()][0];
-    assert.ok(String(diag.message).includes("Boom"), "message=" + diag.message);
+    assert.ok(String(diag.message).includes("Boom"), `message=${diag.message}`);
     assert.ok(
       String(diag.message).includes("uncaught"),
-      "message=" + diag.message,
+      `message=${diag.message}`,
     );
     assert.strictEqual(diag.severity, vscode.DiagnosticSeverity.Information);
   });
@@ -797,7 +797,9 @@ const OPTIONS = {
   await acheck("prefers the higher-precision engine by default", async () => {
     const regs = twoEngines();
     const engine = await whichEngine();
-    regs.forEach((r) => r.dispose());
+    regs.forEach((r) => {
+      r.dispose();
+    });
     assert.strictEqual(engine, "deep");
   });
 
@@ -805,7 +807,9 @@ const OPTIONS = {
     S.config.set("catchme.providerOverrides", { plaintext: "shallow" });
     const regs = twoEngines();
     const engine = await whichEngine();
-    regs.forEach((r) => r.dispose());
+    regs.forEach((r) => {
+      r.dispose();
+    });
     S.config.delete("catchme.providerOverrides");
     assert.strictEqual(engine, "shallow");
   });
@@ -818,6 +822,6 @@ const OPTIONS = {
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => {
-  console.error("\nFATAL: " + ((e && e.stack) || e));
+  console.error(`\nFATAL: ${e?.stack || e}`);
   process.exit(1);
 });

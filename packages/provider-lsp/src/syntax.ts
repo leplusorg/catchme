@@ -185,9 +185,8 @@ export function findEnclosingTryBlocks(
 ): TryBlock[] {
   const out: TryBlock[] = [];
   const re = /\btry\b/g;
-  let m: RegExpExecArray | null;
 
-  while ((m = re.exec(code)) !== null) {
+  for (const m of code.matchAll(re)) {
     const braceOpen = code.indexOf("{", m.index);
     if (braceOpen === -1) continue;
     // Only `try {` or a try-with-resources header `try (...) {` counts. Checking
@@ -219,9 +218,8 @@ export function findThrowAt(
   offset: number,
 ): ThrowExpression | undefined {
   const re = /\b(?:throw|raise)\b/g;
-  let m: RegExpExecArray | null;
 
-  while ((m = re.exec(code)) !== null) {
+  for (const m of code.matchAll(re)) {
     let end = code.indexOf(";", m.index);
     const newline = code.indexOf("\n", m.index);
     if (end === -1 || (newline !== -1 && newline < end)) end = newline;

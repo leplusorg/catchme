@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <title>Catchme: an exception escaping a catching scope</title>
   <!--
     Source for the Marketplace icon (media/icon.png). Kept in the repo so the
     PNG can be regenerated:

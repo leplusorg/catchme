@@ -172,10 +172,10 @@ let fail = 0;
 const check = (name, fn) => {
   try {
     fn();
-    console.log("  ok   " + name);
+    console.log(`  ok   ${name}`);
     pass++;
   } catch (e) {
-    console.log("  FAIL " + name + " -> " + e.message);
+    console.log(`  FAIL ${name} -> ${e.message}`);
     fail++;
   }
 };
@@ -287,10 +287,10 @@ try {
   });
   check("the thrown type comes from real JDT bindings", () => {
     if (site?.exceptionType?.id !== "java.io.IOException")
-      throw new Error("got " + JSON.stringify(site?.exceptionType));
+      throw new Error(`got ${JSON.stringify(site?.exceptionType)}`);
     if (site?.exceptionType?.kind !== "checked")
       throw new Error(
-        "expected kind=checked, got " + site?.exceptionType?.kind,
+        `expected kind=checked, got ${site?.exceptionType?.kind}`,
       );
   });
 
@@ -312,7 +312,7 @@ try {
   const caught = (flow?.terminals || []).find((t) => t.kind === "caught");
   check("analyzeFlow resolves a handler", () => {
     if (!caught)
-      throw new Error("terminals=" + JSON.stringify(flow?.terminals));
+      throw new Error(`terminals=${JSON.stringify(flow?.terminals)}`);
   });
   // The heart of it: IOException matched by `catch (Exception e)` requires a
   // real type hierarchy, which is the whole reason this backend exists.
@@ -327,12 +327,12 @@ try {
   });
   check("supertype match is reported as definite", () => {
     if (caught.confidence !== "definite")
-      throw new Error("confidence=" + caught.confidence);
+      throw new Error(`confidence=${caught.confidence}`);
   });
   check("the first path terminates at the handler", () => {
     const steps = flow?.paths?.[0]?.steps || [];
     if (steps[steps.length - 1]?.kind !== "caught")
-      throw new Error("steps=" + JSON.stringify(steps));
+      throw new Error(`steps=${JSON.stringify(steps)}`);
   });
 
   // ---- interprocedural: throw in deep(), handler two hops away in top() ----
@@ -372,7 +372,7 @@ try {
   check("follows callers across methods to a handler", () => {
     if (!chainCaught) {
       throw new Error(
-        "terminals=" + JSON.stringify(chain?.terminals || []).slice(0, 300),
+        `terminals=${JSON.stringify(chain?.terminals || []).slice(0, 300)}`,
       );
     }
   });
@@ -381,7 +381,7 @@ try {
       0,
       ...(chain?.paths || []).map((p) => p.depth || 0),
     );
-    if (deepest < 1) throw new Error("max depth was " + deepest);
+    if (deepest < 1) throw new Error(`max depth was ${deepest}`);
   });
   // This is the feature under test: every escaping frame must say where it was
   // called from, or the tree cannot render a navigable chain.
@@ -393,19 +393,17 @@ try {
       throw new Error("no escaping frames in the chain");
     const missing = escapes.filter((s) => !s.callSite);
     if (missing.length > 0) {
-      throw new Error(
-        missing.length + " of " + escapes.length + " lack a callSite",
-      );
+      throw new Error(`${missing.length} of ${escapes.length} lack a callSite`);
     }
     const cs = escapes[0].callSite;
     if (typeof cs.uri !== "string" || !cs.range?.start) {
-      throw new Error("malformed callSite: " + JSON.stringify(cs));
+      throw new Error(`malformed callSite: ${JSON.stringify(cs)}`);
     }
   });
   // A reference search cannot prove which override actually runs.
   check("cross-method handlers are labelled possible, not definite", () => {
     if (chainCaught.confidence !== "possible") {
-      throw new Error("confidence=" + chainCaught.confidence);
+      throw new Error(`confidence=${chainCaught.confidence}`);
     }
   });
 
@@ -414,13 +412,13 @@ try {
   ]);
   check("suggestExceptionTypes returns the project Throwable hierarchy", () => {
     if (!Array.isArray(types) || types.length === 0)
-      throw new Error("got " + JSON.stringify(types));
+      throw new Error(`got ${JSON.stringify(types)}`);
   });
   console.log(`  (suggested ${types.length} types)`);
 
   console.log(`\n${pass} passed, ${fail} failed`);
 } catch (e) {
-  console.error("\nERROR: " + (e?.stack || e));
+  console.error(`\nERROR: ${e?.stack || e}`);
   fail++;
 } finally {
   if (proc) proc.kill("SIGTERM");

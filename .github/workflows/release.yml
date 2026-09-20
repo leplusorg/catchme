@@ -37,11 +37,22 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
+      # No pnpm store cache in either job here. A cache entry is writable from
+      # any branch and still restorable in this run, so caching would make it
+      # an unsigned input to artifacts published to two marketplaces and npm
+      # (zizmor's cache-poisoning audit). Releases are rare; the cold install
+      # is worth it.
+      #
+      # `package-manager-cache: false` rather than just dropping `cache:`.
+      # setup-node v5+ auto-caches when package.json's `packageManager` names
+      # npm - it is pnpm here, so that path never fires - but zizmor does not
+      # read package.json and treats the omitted input as caching-on. This is
+      # the opt-out the action and the audit both understand.
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 20
-          cache: pnpm
+          package-manager-cache: false
 
       - name: Setup JDK
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -84,7 +95,14 @@ jobs:
       # packages/core, so the artifact is named the same way here as in the
       # ovsx and `gh release upload` steps below. A bare `catchme.vsix` would
       # resolve against packages/core and fail.
-      - name: Publish to VS Code Marketplace
+      #
+      # The ignore is a false positive: zizmor matches `pnpm ... publish` as an
+      # npm-registry publish, but this publishes to the VS Code Marketplace,
+      # which authenticates with an Azure DevOps PAT and has no OIDC trusted
+      # publishing to move to. Rewriting it as `npx --yes @vscode/vsce publish`
+      # does silence the audit - and is exactly the unpinned fetch the comment
+      # above rejects, so the lint is not worth trading for it.
+      - name: Publish to VS Code Marketplace # zizmor: ignore[use-trusted-publishing]
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: pnpm --filter catchme exec vsce publish --packagePath "$PWD/catchme.vsix"
@@ -128,7 +146,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 20
-          cache: pnpm
+          package-manager-cache: false # see the extension job above
           registry-url: https://registry.npmjs.org
 
       - name: Install
