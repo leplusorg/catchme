@@ -16,7 +16,7 @@
     "@leplusorg/catchme-api": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.1",
     "@types/vscode": "1.105.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
