@@ -4,6 +4,17 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+# FIXME: revisit on 2027-01-04. These overrides come from "pnpm.overrides" in
+# package.json (see the "//pnpm" note there) and force patched versions of
+# transitive dependencies flagged by osv-scanner:
+# - brace-expansion (CVE-2026-102276, CVE-2026-102277, CVE-2026-102278; fixed
+#   in 1.1.21, 2.1.7 and 5.0.12) via minimatch 3/9/10. The minimatch ranges
+#   already allow the fixed versions, so these overrides only stop the lockfile
+#   from going back below the fix. Remove them once minimatch requires fixed
+#   versions itself, or as soon as osv-scanner still passes without them.
+# - serialize-javascript (GHSA-5c6j-r48x-rmvq, CVE-2026-34043; fixed in 7.0.5)
+#   via mocha 11 (^6.0.2) from @vscode/test-cli. Remove it once
+#   @vscode/test-cli depends on mocha 12 or later (which depends on ^7.1.1).
 overrides:
   brace-expansion@<1.1.21: ^1.1.21
   brace-expansion@>=2.0.0 <2.1.7: ^2.1.7
