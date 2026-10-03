@@ -126,7 +126,8 @@ export function registerCommands(deps: Deps): vscode.Disposable[] {
     }),
 
     vscode.commands.registerCommand("catchme.rerun", async () => {
-      if (lastRequest) await guarded(() => run(lastRequest!.throwSite));
+      const request = lastRequest;
+      if (request) await guarded(() => run(request.throwSite));
     }),
 
     vscode.commands.registerCommand("catchme.clear", () => {
@@ -140,11 +141,12 @@ export function registerCommands(deps: Deps): vscode.Disposable[] {
     vscode.commands.registerCommand(
       "catchme.expandPath",
       async (fromDepth?: number) => {
-        if (!lastRequest) return;
-        const current = lastRequest.options.maxDepth;
+        const request = lastRequest;
+        if (!request) return;
+        const current = request.options.maxDepth;
         const stoppedAt = typeof fromDepth === "number" ? fromDepth : current;
         const maxDepth = Math.max(current * 2, stoppedAt + 4);
-        await guarded(() => run(lastRequest!.throwSite, { maxDepth }));
+        await guarded(() => run(request.throwSite, { maxDepth }));
       },
     ),
 

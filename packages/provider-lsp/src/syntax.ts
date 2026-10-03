@@ -106,7 +106,7 @@ export function matchBrace(code: string, openIndex: number): number {
 /** Next non-whitespace index at or after `from`. */
 function skipSpace(code: string, from: number): number {
   let i = from;
-  while (i < code.length && /\s/.test(code[i]!)) i++;
+  while (i < code.length && /\s/.test(code.charAt(i))) i++;
   return i;
 }
 
@@ -167,7 +167,7 @@ export function typeNamesFrom(header: string): string[] {
       // In multi-catch (`A | B e`) only the last part carries the parameter
       // name, so every part is a type. With a single part, a lone token is a
       // binding name (`catch (e)`) rather than a type.
-      return parts.length > 1 || tokens.length >= 2 ? tokens[0]! : "";
+      return parts.length > 1 || tokens.length >= 2 ? (tokens[0] ?? "") : "";
     })
     .filter((t) => t !== "" && new RegExp(`^${IDENT}$`).test(t));
 }

@@ -105,7 +105,8 @@ export function parseFixture(text: string): ParsedFixture {
   text.split(/\r?\n/).forEach((rawLine, line) => {
     const m = ANNOTATION.exec(rawLine);
     if (!m) return;
-    const kindToken = m[1]!;
+    // Group 1 is not optional, so it is always present on a match.
+    const kindToken = m[1] ?? "";
 
     let confidence: Confidence | undefined;
     let typeId: string | undefined;

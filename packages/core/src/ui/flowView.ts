@@ -309,7 +309,9 @@ export class FlowTreeDataProvider
   }
 
   private destinationItem(group: Destination): vscode.TreeItem {
-    if (group.key === TRUNCATED_KEY) {
+    // Only the truncated group has no terminal (see groupByDestination).
+    const terminal = group.terminal;
+    if (!terminal) {
       const item = new vscode.TreeItem(
         "unresolved — depth limit reached",
         vscode.TreeItemCollapsibleState.Collapsed,
@@ -320,7 +322,6 @@ export class FlowTreeDataProvider
       return item;
     }
 
-    const terminal = group.terminal!;
     const confidence = destinationConfidence(group);
     const item = new vscode.TreeItem(
       terminal.label,
