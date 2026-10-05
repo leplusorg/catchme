@@ -1,0 +1,120 @@
+name: Maven Dependency Check
+
+on:
+  schedule:
+    # Every 6 days, to refresh the cached NVD database inside GitHub's 7-day
+    # cache eviction window (see the "Cache dependency-check NVD database" step).
+    # cron has no true "every N days", so */6 resets at the start of each month;
+    # the gap between runs nonetheless stays at or below 6 days.
+    - cron: "0 0 */6 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  MAVEN_OPTS: >
+    -Dhttps.protocols=TLSv1.2
+    -Dmaven.repo.local=.m2/repository
+    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+    -Dorg.slf4j.simpleLogger.showDateTime=true
+    -Djava.awt.headless=true
+  MAVEN_CLI_OPTS: >
+    --batch-mode
+    --errors
+    --fail-at-end
+    --show-version
+    -DinstallAtEnd=true
+    -DdeployAtEnd=true
+
+jobs:
+  maven-dependency-check:
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to read the code
+      contents: read
+      # Required to upload the SARIF file to the security tab
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 25
+      - name: Cache Maven dependencies
+        # setup-java's built-in cache targets ~/.m2/repository, but this build
+        # redirects the local repo to .m2/repository (see -Dmaven.repo.local in
+        # MAVEN_OPTS), so cache it at the location the build actually uses. The
+        # NVD database under it is excluded - it is cached separately below with
+        # a rotating key.
+        # The path is relative to the workspace while -Dmaven.repo.local is
+        # relative to Maven's working directory (server-java), hence the prefix.
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            server-java/.m2/repository
+            !server-java/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-maven-${{ hashFiles('server-java/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Cache dependency-check NVD database
+        # Persist the NVD database (an H2 DB that dependency-check stores under
+        # the local Maven repo) between runs. dependency-check updates it
+        # incrementally, so restoring the previous copy turns the slow,
+        # rate-limit-prone full NVD download into a quick delta update. The
+        # unique per-run key always saves the freshly-updated DB; restore-keys
+        # restores the most recent previous copy as the starting point.
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: server-java/.m2/repository/org/owasp/dependency-check-data
+          key: dependency-check-data-${{ github.run_id }}
+          restore-keys: |
+            dependency-check-data-
+      - name: Dependency Check with Maven
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          OSS_INDEX_PASSWORD: ${{ secrets.SONATYPE_GUIDE_API_KEY }}
+        working-directory: server-java
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Do not set IFS=$'\n\t', breaks ${MAVEN_CLI_OPTS}
+          # The NVD API key and OSS Index password are read from the
+          # NVD_API_KEY / OSS_INDEX_PASSWORD environment variables by the pom
+          # (the nvd-api-key and oss-index-password profiles), so the secrets
+          # are never passed on the command line where they would be visible in
+          # the process list.
+          # Without NVD_API_KEY the nvd-api-key profile stays off and the pom
+          # skips the scan outright - which is the whole job, so there is
+          # nothing left to do but say so. Left to run, it would also write no
+          # SARIF and fail the upload step below instead, which says nothing
+          # about why. Only the NVD key is required: OSS Index merely raises
+          # the anonymous rate limit, so an absent password degrades the scan
+          # rather than disabling it.
+          if [ -z "${NVD_API_KEY:-}" ]; then
+            echo "::error::NVD_API_KEY is not set, so dependency-check would be skipped and nothing scanned."
+            echo "Add it as a repository secret; a key is free from" >&2
+            echo "https://nvd.nist.gov/developers/request-an-api-key" >&2
+            exit 1
+          fi
+          # SARIF is generated so the findings can be uploaded to the GitHub
+          # Security tab. The report is written before failBuildOnCVSS is
+          # evaluated, so the file exists even when the scan fails the build.
+          # shellcheck disable=SC2086 # [Double quote to prevent globbing and word splitting]: splitting is desired for MAVEN_CLI_OPTS
+          ./mvnw ${MAVEN_CLI_OPTS} -Dformat=SARIF dependency-check:aggregate
+      - name: Upload dependency-check scan results to GitHub Security tab
+        # Upload even when the previous step fails the build on a vulnerability,
+        # otherwise the findings would never reach the Security tab.
+        if: ${{ !cancelled() }}
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: server-java/target/dependency-check-report.sarif
+      - name: Clean up
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS=$'\n\t'
+          rm "${HOME}/.m2/settings.xml"

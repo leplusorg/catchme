@@ -35,13 +35,14 @@
     "turbo": "^2.11.3",
     "typescript": "^7.0.2"
   },
-  "//pnpm": "FIXME: revisit on 2027-01-04. These overrides force patched versions of transitive dependencies flagged by osv-scanner. brace-expansion (CVE-2026-102276, CVE-2026-102277, CVE-2026-102278; fixed in 1.1.21, 2.1.7 and 5.0.12) is pulled in via minimatch 3/9/10 (Eleventy, mocha, @vscode/test-cli). Those minimatch ranges (^1.1.7, ^2.0.2, ^5.0.8) already allow the fixed versions, so these overrides only stop the lockfile from going back below the fix. Remove them once the minimatch versions in the tree require fixed versions themselves, or as soon as osv-scanner still passes on a lockfile regenerated without them. serialize-javascript (GHSA-5c6j-r48x-rmvq, CVE-2026-34043; fixed in 7.0.5) comes from mocha 11 via @vscode/test-cli, and mocha 11 depends on ^6.0.2, so this override is the only way to reach 7.x. Remove it once @vscode/test-cli depends on mocha 12 or later (mocha 12 depends on serialize-javascript ^7.1.1).",
+  "//pnpm": "FIXME: revisit on 2027-01-04. These overrides force patched versions of transitive dependencies flagged by osv-scanner. brace-expansion (CVE-2026-102276, CVE-2026-102277, CVE-2026-102278; fixed in 1.1.21, 2.1.7 and 5.0.12) is pulled in via minimatch 3/9/10 (Eleventy, mocha, @vscode/test-cli). Those minimatch ranges (^1.1.7, ^2.0.2, ^5.0.8) already allow the fixed versions, so these overrides only stop the lockfile from going back below the fix. Remove them once the minimatch versions in the tree require fixed versions themselves, or as soon as osv-scanner still passes on a lockfile regenerated without them. serialize-javascript (GHSA-5c6j-r48x-rmvq, CVE-2026-34043; fixed in 7.0.5) comes from mocha 11 via @vscode/test-cli, and mocha 11 depends on ^6.0.2, so this override is the only way to reach 7.x. Remove it once @vscode/test-cli depends on mocha 12 or later (mocha 12 depends on serialize-javascript ^7.1.1). diff (GHSA-73rr-hh4g-fpgx, CVE-2026-24001; fixed in 8.0.3) also comes from mocha 11, which depends on ^7.0.0, and no 7.x release has the fix, so this override is the only way to reach 8.x. mocha 11 only calls createPatch and diffWordsWithSpace, which diff 8 still exports. Remove it together with the serialize-javascript one (mocha 12 depends on diff ^9.0.0).",
   "pnpm": {
     "overrides": {
       "brace-expansion@<1.1.21": "^1.1.21",
       "brace-expansion@>=2.0.0 <2.1.7": "^2.1.7",
       "brace-expansion@>=3.0.0 <5.0.12": "^5.0.12",
-      "serialize-javascript@<7.0.5": "^7.1.2"
+      "serialize-javascript@<7.0.5": "^7.1.2",
+      "diff@>=6.0.0 <8.0.3": "^8.0.3"
     }
   }
 }

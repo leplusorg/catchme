@@ -1,0 +1,16 @@
+# Vulnerabilities osv-scanner should not report. osv-scanner reads this file
+# because it sits next to pnpm-lock.yaml. Every entry expires, so it has to be
+# looked at again instead of being silently ignored forever.
+
+[[IgnoredVulns]]
+# braces (CVE-2026-93687; stack-exhaustion DoS through deeply nested patterns)
+# has no fixed release: 3.0.3 is both the last affected and the latest version.
+# It is only pulled in by chokidar 3 via @11ty/eleventy 3 and
+# @11ty/eleventy-dev-server 2 (site/), which only expand the site's own
+# hand-written watch globs, never untrusted input. chokidar 4 and later do not
+# depend on braces, but they dropped glob support, so overriding chokidar would
+# break Eleventy's watch mode. Remove this entry once braces publishes a fix or
+# the site moves to an Eleventy release on chokidar 5 (4.0 is still alpha).
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2027-01-04T00:00:00Z
+reason = "No fixed braces release; only reachable through Eleventy's watch globs, which come from the site's own config."

@@ -84,10 +84,10 @@
          and see the profile for how to supply it.
 
          This default is for humans, not for CI. Skipping is fine on a laptop,
-         where whoever ran the build knows what they got; it is not fine in a
+         where whoever ran the scan knows what they got; it is not fine in a
          pipeline, where a skipped scan and a clean one are the same shade of
-         green. So ci.yml refuses to build at all without the key rather than
-         relying on this. -->
+         green. So maven-dependency-check.yml refuses to run at all without
+         the key rather than relying on this. -->
     <dependencyCheck.skip>true</dependencyCheck.skip>
     <!-- Empty on purpose, and only ever read when the scan is skipped: the
          profiles below supply the real values from the environment. An empty
@@ -206,6 +206,11 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Declared for its configuration only, with no execution bound to the
+           lifecycle: a CVE can be published against an unchanged dependency
+           at any time, so a scan in `verify` would break unrelated builds.
+           The scheduled maven-dependency-check.yml workflow runs it instead,
+           as an explicit `dependency-check:aggregate` goal. -->
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
@@ -217,13 +222,6 @@
           <ossIndexPassword>${dependencyCheck.ossIndexPassword}</ossIndexPassword>
           <skip>${dependencyCheck.skip}</skip>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -331,9 +329,9 @@
          repository where the secret was never added, leaves the scan off
          instead of failing the build with a blank credential.
 
-         To run it locally: NVD_API_KEY=... mvn verify. To force it on with
-         the key supplied some other way (a settings.xml server entry, say):
-         -DdependencyCheck.skip=false. -->
+         To run it locally: NVD_API_KEY=... mvn dependency-check:aggregate.
+         To force it on with the key supplied some other way (a settings.xml
+         server entry, say): -DdependencyCheck.skip=false. -->
     <profile>
       <id>nvd-api-key</id>
       <activation>
