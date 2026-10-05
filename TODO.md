@@ -124,13 +124,6 @@ test:integration`). They last passed before the call-chain work landed.
 
 ## Housekeeping
 
-- [ ] **Add an `NVD_API_KEY` repository secret.** Until it exists the
-      scheduled `maven-dependency-check.yml` workflow fails on purpose: without
-      a key `server-java/pom.xml` skips the dependency-check scan, and a skipped
-      scan is indistinguishable from a clean one once the job is green. The key
-      is free from <https://nvd.nist.gov/developers/request-an-api-key>; the
-      pom's `nvd-api-key` profile picks it up from the environment
-      automatically.
 - [ ] **Narrow the super-linter prose rules.** The `ci(super-linter): linting`
       pass rewrote link text (`[README]` → `[Readme]`), expanded "Visual Studio Code" to
       "Visual Studio Code" inside product names, and broke a continuation indent
