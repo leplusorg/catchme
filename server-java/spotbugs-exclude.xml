@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/3.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.0.1/spotbugs/etc/findbugsfilter.xsd">
+  <!-- The analyzer must share jdt.ls's progress monitor (not a copy) to
+       observe cancellation; a monitor cannot be defensively copied. -->
+  <Match>
+    <Class name="org.leplus.catchme.jdt.ExceptionFlowAnalyzer" />
+    <Field name="monitor" />
+    <Bug pattern="EI_EXPOSE_REP2" />
+  </Match>
+</FindBugsFilter>
