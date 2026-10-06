@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.IBinding;
@@ -73,7 +74,7 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
    * user can always type a fully-qualified name instead.
    */
   private Object suggestExceptionTypes(Map<String, Object> payload, IProgressMonitor monitor)
-      throws Exception {
+      throws JavaModelException {
     ICompilationUnit unit = unit(payload);
     if (unit == null) {
       return List.of();
@@ -113,7 +114,7 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
   }
 
   private Object analyzeFlow(Map<String, Object> payload, IProgressMonitor monitor)
-      throws Exception {
+      throws JavaModelException {
     ICompilationUnit unit = unit(payload);
     if (unit == null) {
       return empty("No compilation unit for the requested URI.");
@@ -172,7 +173,7 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
   }
 
   private static ITypeBinding resolveTypeBinding(
-      IJavaProject project, String fqn, IProgressMonitor monitor) throws Exception {
+      IJavaProject project, String fqn, IProgressMonitor monitor) throws JavaModelException {
     if (project == null || fqn == null) {
       return null;
     }
