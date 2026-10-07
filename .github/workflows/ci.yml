@@ -112,14 +112,17 @@ jobs:
           key: maven-${{ runner.os }}-${{ hashFiles('server-java/pom.xml', 'server-java/META-INF/MANIFEST.MF') }}
           restore-keys: maven-${{ runner.os }}-
 
-      # Invoked as `mvn` rather than `./mvnw` so this works whether or not the
-      # Maven wrapper has been committed to server-java/.
+      # Through the wrapper, not the runner's `mvn`: the wrapper pins (and
+      # checksums) the Maven distribution, which in turn fixes the versions of
+      # the default lifecycle plugins the pom does not declare. mvnw resolves
+      # .mvn/ relative to the cwd, hence the working directory.
       #
       # No dependency-check here: a CVE can be published against an unchanged
       # dependency at any time, so it would fail builds that changed nothing.
       # The scheduled maven-dependency-check.yml workflow scans instead.
       - name: Build analyzer bundle
-        run: mvn -B -ntp -f server-java/pom.xml verify
+        working-directory: server-java
+        run: ./mvnw -B -ntp verify
 
       - name: Upload analyzer jar
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
