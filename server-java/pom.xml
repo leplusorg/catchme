@@ -181,20 +181,14 @@
           <target>${java.minVersion}</target>
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.16.0</version>
-        <configuration>
-          <release>${java.minVersion}</release>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
+          <!-- eclipse-plugin packaging compiles with ECJ, not javac, so
+               maven-compiler-plugin never runs and javac's -Xlint/-Werror
+               would be ignored. These are ECJ's equivalents. "javadoc"
+               checks every existing doc comment, including missing
+               @param/@return/@throws tags. -->
           <compilerArgs>
-            <arg>-Xlint:all</arg>
-            <arg>-Xdoclint:all</arg>
-            <arg>-Werror</arg>
+            <arg>-warn:+allDeprecation,dep-ann,uselessTypeCheck,fallthrough,hashCode,over-ann,static-access,unusedAllocation,unusedArgument,unusedImport,unusedLabel,unusedLocal,unusedPrivate,unusedThrown,unusedTypeArgs,javadoc,semicolon</arg>
+            <arg>-failOnWarning</arg>
           </compilerArgs>
         </configuration>
       </plugin>
@@ -225,6 +219,11 @@
               <source>${java.minVersion}</source>
               <show>private</show>
               <nohelp>true</nohelp>
+              <!-- doclint's "missing" check covers every member shown,
+                   so with <show>private</show> nothing may go
+                   undocumented. ECJ's javadoc warning only checks the
+                   comments that exist. -->
+              <failOnWarnings>true</failOnWarnings>
             </configuration>
           </execution>
         </executions>
