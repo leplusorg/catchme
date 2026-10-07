@@ -55,13 +55,28 @@ import org.eclipse.jdt.core.search.SearchRequestor;
  */
 public final class ExceptionFlowAnalyzer {
 
+  /** Shared with the caller, not copied: cancellation must be observed while the walk runs. */
   private final IProgressMonitor monitor;
+
+  /** Maximum number of call-site hops before a path is cut short. */
   private final int maxDepth;
+
+  /** Wall-clock time, in epoch milliseconds, after which the walk stops. */
   private final long deadlineMillis;
+
+  /** Whether caller searches cover the whole workspace or only the throw site's project. */
   private final boolean includeLibraryCode;
 
+  /** Set once any path has been cut short by the depth cap, the deadline or cancellation. */
   private boolean partial;
 
+  /**
+   * Creates an analyzer for one request; its time budget starts now.
+   *
+   * @param monitor progress and cancellation for the whole analysis.
+   * @param options the request's {@code options}: {@code maxDepth} (default 8), {@code timeoutMs}
+   *     (default 15000) and {@code includeLibraryCode} (default false).
+   */
   public ExceptionFlowAnalyzer(IProgressMonitor monitor, Map<String, Object> options) {
     this.monitor = monitor;
     this.maxDepth = intOption(options, "maxDepth", 8);
@@ -74,6 +89,9 @@ public final class ExceptionFlowAnalyzer {
   /**
    * Locate the throw statement at {@code (line, character)}.
    *
+   * @param unit the compilation unit to search.
+   * @param line 0-based line of the cursor.
+   * @param character 0-based character of the cursor.
    * @return a JSON-ready ThrowSite map, or {@code null} when the position is not inside a throw.
    *     Returning null is meaningful: it drives the context key that shows or hides the menu item.
    */
@@ -92,7 +110,16 @@ public final class ExceptionFlowAnalyzer {
     return Json.throwSite(unit, Json.range(root, stmt), Json.exceptionType(thrown), false);
   }
 
-  /** Analyse propagation of {@code thrownType} from the given position. */
+  /**
+   * Analyse propagation of {@code thrownType} from the given position.
+   *
+   * @param unit the compilation unit containing the throw site.
+   * @param line 0-based line of the throw site.
+   * @param character 0-based character of the throw site.
+   * @param thrownType the exception type whose propagation to trace.
+   * @param throwSiteJson the ThrowSite map echoed back in the result.
+   * @return a JSON-ready FlowResult map: paths, terminals, and whether the walk was partial.
+   */
   public Map<String, Object> analyze(
       ICompilationUnit unit,
       int line,
@@ -200,6 +227,11 @@ public final class ExceptionFlowAnalyzer {
 
   /**
    * Walk outward from {@code frame.node} to the first matching handler, or to the method boundary.
+   *
+   * @param frame the node to start from, with the unit and AST it belongs to.
+   * @param thrown the exception type being propagated.
+   * @return a {@code caught} or {@code escapes-function} sink, or {@code null} when there is no
+   *     enclosing method at all.
    */
   private Map<String, Object> resolveWithinMethod(Frame frame, ITypeBinding thrown) {
     ASTNode current = frame.node;
@@ -241,6 +273,10 @@ public final class ExceptionFlowAnalyzer {
   /**
    * Copy of {@code steps} whose last entry records the call site it escaped through. Copied rather
    * than mutated because sibling branches share the prefix.
+   *
+   * @param steps the path so far; left untouched.
+   * @param callSite the location the exception escaped through.
+   * @return the annotated copy.
    */
   @SuppressWarnings("unchecked")
   private static List<Object> withCallSite(List<Object> steps, Map<String, Object> callSite) {
@@ -259,7 +295,13 @@ public final class ExceptionFlowAnalyzer {
     return copy;
   }
 
-  /** Only the try body and try-with-resources resources are protected. */
+  /**
+   * Only the try body and try-with-resources resources are protected.
+   *
+   * @param ascendedFrom the child of {@code tryStmt} the walk came up through.
+   * @param tryStmt the enclosing try statement.
+   * @return true when an exception from {@code ascendedFrom} can be caught by {@code tryStmt}.
+   */
   private boolean isProtectedRegion(ASTNode ascendedFrom, TryStatement tryStmt) {
     if (ascendedFrom == tryStmt.getBody()) {
       return true;
@@ -272,6 +314,14 @@ public final class ExceptionFlowAnalyzer {
     return false;
   }
 
+  /**
+   * The first catch clause of {@code tryStmt} that handles {@code thrown}, in source order, which
+   * is the order the JVM tries them in. Each alternative of a multi-catch is checked separately.
+   *
+   * @param tryStmt the try statement whose clauses are checked.
+   * @param thrown the exception type being propagated.
+   * @return the matching clause, or {@code null} when none handles it.
+   */
   private CatchClause firstMatchingCatch(TryStatement tryStmt, ITypeBinding thrown) {
     for (Object o : tryStmt.catchClauses()) {
       CatchClause clause = (CatchClause) o;
@@ -289,13 +339,27 @@ public final class ExceptionFlowAnalyzer {
     return null;
   }
 
-  /** A {@code catch (C)} handles thrown type T iff T is C or a subtype of C. */
+  /**
+   * A {@code catch (C)} handles thrown type T iff T is C or a subtype of C.
+   *
+   * @param thrown T, the exception type being propagated.
+   * @param caught C, the type declared by the catch clause.
+   * @return true when the catch clause handles the exception.
+   */
   private boolean catches(ITypeBinding thrown, ITypeBinding caught) {
     return thrown != null && caught != null && thrown.isSubTypeCompatible(caught);
   }
 
   // -------------------------------------------------------- interprocedural
 
+  /**
+   * Every source reference to {@code method}, found with the JDT search engine. Callers in
+   * binaries are skipped since there is no source to continue the walk in.
+   *
+   * @param method the method the exception escapes from.
+   * @param diagnostics where a failed search is reported.
+   * @return the call sites; empty when the method has no binding or the search fails.
+   */
   private List<CallSite> findCallers(MethodDeclaration method, List<String> diagnostics) {
     IMethodBinding binding = method.resolveBinding();
     if (binding == null) {
@@ -308,7 +372,7 @@ public final class ExceptionFlowAnalyzer {
     List<CallSite> out = new ArrayList<>();
     try {
       SearchPattern pattern =
-          SearchPattern.createPattern((IMethod) element, IJavaSearchConstants.REFERENCES);
+          SearchPattern.createPattern(element, IJavaSearchConstants.REFERENCES);
       if (pattern == null) {
         return List.of();
       }
@@ -336,7 +400,7 @@ public final class ExceptionFlowAnalyzer {
               includeLibraryCode
                   ? SearchEngine.createWorkspaceScope()
                   : SearchEngine.createJavaSearchScope(
-                      new IJavaElement[] {((IMethod) element).getJavaProject()}),
+                      new IJavaElement[] {element.getJavaProject()}),
               requester,
               monitor);
     } catch (Exception e) {
@@ -347,6 +411,12 @@ public final class ExceptionFlowAnalyzer {
 
   // ---------------------------------------------------------------- helpers
 
+  /**
+   * Parses with bindings, recovering them where the source does not compile.
+   *
+   * @param unit the compilation unit to parse.
+   * @return its AST.
+   */
   private CompilationUnit parse(ICompilationUnit unit) {
     ASTParser parser = ASTParser.newParser(AST.getJLSLatest());
     parser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -356,6 +426,15 @@ public final class ExceptionFlowAnalyzer {
     return (CompilationUnit) parser.createAST(monitor);
   }
 
+  /**
+   * The innermost node at an LSP position, falling back to the start of the line and then to the
+   * whole unit when the position is out of range.
+   *
+   * @param root the AST to search.
+   * @param line 0-based line.
+   * @param character 0-based character.
+   * @return the node at that position; never null.
+   */
   private ASTNode nodeAt(CompilationUnit root, int line, int character) {
     // LSP positions are 0-based; CompilationUnit#getPosition takes 1-based lines.
     int offset = root.getPosition(line + 1, character);
@@ -366,6 +445,12 @@ public final class ExceptionFlowAnalyzer {
     return node != null ? node : root;
   }
 
+  /**
+   * The throw statement containing {@code node}, if any.
+   *
+   * @param node the node to start from; may be the throw statement itself.
+   * @return the enclosing throw statement, or {@code null} when there is none.
+   */
   private static ThrowStatement enclosingThrow(ASTNode node) {
     while (node != null && !(node instanceof ThrowStatement)) {
       node = node.getParent();
@@ -373,6 +458,12 @@ public final class ExceptionFlowAnalyzer {
     return (ThrowStatement) node;
   }
 
+  /**
+   * The method declaration containing {@code node}, if any.
+   *
+   * @param node the node to start from.
+   * @return the enclosing method, or {@code null} for a node in an initializer or a field.
+   */
   private static MethodDeclaration enclosingMethod(ASTNode node) {
     while (node != null && !(node instanceof MethodDeclaration)) {
       node = node.getParent();
@@ -380,6 +471,12 @@ public final class ExceptionFlowAnalyzer {
     return (MethodDeclaration) node;
   }
 
+  /**
+   * How an escape is labelled in the UI.
+   *
+   * @param boundary a method declaration, lambda expression or initializer.
+   * @return a human-readable description of {@code boundary}.
+   */
   private static String describeBoundary(ASTNode boundary) {
     if (boundary instanceof MethodDeclaration) {
       return "method '" + ((MethodDeclaration) boundary).getName().getIdentifier() + "'";
@@ -390,7 +487,12 @@ public final class ExceptionFlowAnalyzer {
     return "an initializer";
   }
 
-  /** Checked = neither a RuntimeException nor an Error. */
+  /**
+   * Checked = neither a RuntimeException nor an Error.
+   *
+   * @param thrown the exception type to classify.
+   * @return true when the compiler would require {@code thrown} to be caught or declared.
+   */
   static boolean isChecked(ITypeBinding thrown) {
     for (ITypeBinding t = thrown; t != null; t = t.getSuperclass()) {
       String qn = t.getQualifiedName();
@@ -401,10 +503,23 @@ public final class ExceptionFlowAnalyzer {
     return true;
   }
 
+  /**
+   * Whether the walk must stop now.
+   *
+   * @return true once the request is cancelled or its deadline has passed.
+   */
   private boolean outOfBudget() {
     return (monitor != null && monitor.isCanceled()) || System.currentTimeMillis() > deadlineMillis;
   }
 
+  /**
+   * An integer option, tolerating absent or mistyped values.
+   *
+   * @param options the request's options; may be null.
+   * @param key the option name.
+   * @param fallback the value to use when the option is missing or not a number.
+   * @return the option's value as an int.
+   */
   private static int intOption(Map<String, Object> options, String key, int fallback) {
     Object v = options == null ? null : options.get(key);
     return v instanceof Number ? ((Number) v).intValue() : fallback;
@@ -414,12 +529,30 @@ public final class ExceptionFlowAnalyzer {
 
   /** One frame of the breadth-first walk. */
   private static final class Frame {
+    /** The compilation unit {@link #node} belongs to. */
     final ICompilationUnit unit;
+
+    /** The AST of {@link #unit}, kept to compute ranges without reparsing. */
     final CompilationUnit root;
+
+    /** Where the walk resumes: the throw site or a call site. */
     final ASTNode node;
+
+    /** Number of call-site hops from the throw site. */
     final int depth;
+
+    /** The sinks visited so far on this path. */
     final List<Object> steps;
 
+    /**
+     * Creates a frame.
+     *
+     * @param unit the compilation unit {@code node} belongs to.
+     * @param root the AST of {@code unit}.
+     * @param node where the walk resumes.
+     * @param depth number of call-site hops from the throw site.
+     * @param steps the sinks visited so far; owned by this frame.
+     */
     Frame(
         ICompilationUnit unit, CompilationUnit root, ASTNode node, int depth, List<Object> steps) {
       this.unit = unit;
@@ -430,17 +563,36 @@ public final class ExceptionFlowAnalyzer {
     }
   }
 
+  /** A reference to a method, as reported by the search engine. */
   private static final class CallSite {
+    /** The compilation unit containing the reference. */
     final ICompilationUnit unit;
+
+    /** Character offset of the reference in {@link #unit}. */
     final int offset;
+
+    /** Character length of the reference. */
     final int length;
 
+    /**
+     * Creates a call site.
+     *
+     * @param unit the compilation unit containing the reference.
+     * @param offset character offset of the reference.
+     * @param length character length of the reference.
+     */
     CallSite(ICompilationUnit unit, int offset, int length) {
       this.unit = unit;
       this.offset = offset;
       this.length = length;
     }
 
+    /**
+     * Identity for the visited set. The length is left out: two references in one unit cannot
+     * start at the same offset.
+     *
+     * @return a key identifying this call site across parses.
+     */
     String key() {
       return unit.getHandleIdentifier() + "#" + offset;
     }

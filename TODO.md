@@ -93,6 +93,16 @@ test:integration`). They last passed before the call-chain work landed.
       status checks and merges immediately when none are configured. Until the
       `Node (build, lint, unit tests)` check is required on `main`, a breaking
       upstream bump would merge itself and the warning would be lost.
+- [ ] **Move the Maven wrapper to 3.10 once Tycho supports it.** Maven 3.10.0
+      replaces Resolver 1.9 with Resolver 2, whose request validator rejects
+      classifiers containing `/`, `\`, `..` or `:`. Tycho 5.0.4 (the latest as
+      of 2026-10-07) exposes jars nested inside bundles as dependencies
+      classified by their in-bundle path — `org.apache.ant`'s `lib/ant.jar`
+      and friends — so the build fails with `Invalid Collect Request` before
+      any mojo runs. The wrapper stays on 3.9.16 and `dependabot.yml` ignores
+      `org.apache.maven:apache-maven >= 3.10.0`. When a Tycho release fixes
+      it, bump Tycho, then the wrapper (`distributionUrl` _and_
+      `distributionSha256Sum`), and drop the ignore.
 
 ## Coverage gaps
 

@@ -25,23 +25,37 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
  *
  * <p>jdt.ls calls this on a worker thread with the JSON payload sent by {@code
  * java.execute.workspaceCommand}. Everything returned must be plain JSON-serialisable data matching
- * the model in {@code @leplusorg/catchme-api} — see {@link Json}.
+ * the model in {@code @leplusorg/catchme-api} — see {@code Json}.
  *
  * <p>The analysis itself lives in {@link ExceptionFlowAnalyzer}; this class only unpacks payloads
  * and resolves Java model handles.
  */
+// jdt.ls only exposes IDelegateCommandHandler and JDTUtils from an internal
+// package; there is no public API for contributing workspace commands.
+@SuppressWarnings("restriction")
 public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
 
+  // The command IDs must match plugin.xml and COMMANDS in
+  // packages/provider-java/src/index.ts.
+
+  /** Command ID for {@link #resolveThrowSite}. */
   static final String RESOLVE_THROW_SITE = "catchme.java.resolveThrowSite";
+
+  /** Command ID for {@link #suggestExceptionTypes}. */
   static final String SUGGEST_TYPES = "catchme.java.suggestExceptionTypes";
+
+  /** Command ID for {@link #analyzeFlow}. */
   static final String ANALYZE_FLOW = "catchme.java.analyzeFlow";
 
   /** Cap on Quick Pick suggestions; a project's Throwable hierarchy is large. */
   private static final int MAX_SUGGESTIONS = 200;
 
+  /** Instantiated reflectively by jdt.ls from the {@code plugin.xml} extension. */
+  public CatchMeDelegateCommandHandler() {}
+
   @Override
   public Object executeCommand(String commandId, List<Object> arguments, IProgressMonitor monitor)
-      throws Exception {
+      throws JavaModelException {
     Map<String, Object> payload = firstMap(arguments);
 
     switch (commandId) {
@@ -58,6 +72,13 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
 
   // ------------------------------------------------------------- commands
 
+  /**
+   * The throw statement under the cursor, used to decide whether to offer the menu item.
+   *
+   * @param payload the command arguments: {@code uri} and {@code position}.
+   * @param monitor progress and cancellation for parsing.
+   * @return a ThrowSite map, or {@code null} when the cursor is not inside a throw.
+   */
   private Object resolveThrowSite(Map<String, Object> payload, IProgressMonitor monitor) {
     ICompilationUnit unit = unit(payload);
     if (unit == null) {
@@ -72,6 +93,11 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
    * Candidate exception types for the Quick Pick, most relevant first: types already imported by
    * the file, then the project's Throwable hierarchy. Ordering matters more than completeness — the
    * user can always type a fully-qualified name instead.
+   *
+   * @param payload the command arguments; only {@code uri} is read.
+   * @param monitor progress and cancellation for the type-hierarchy search.
+   * @return a list of ExceptionTypeRef maps, at most {@value #MAX_SUGGESTIONS} entries.
+   * @throws JavaModelException if the project's types or hierarchy cannot be read.
    */
   private Object suggestExceptionTypes(Map<String, Object> payload, IProgressMonitor monitor)
       throws JavaModelException {
@@ -113,6 +139,17 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
     return out;
   }
 
+  /**
+   * Where an exception thrown at the given range can be handled. For a simulated throw the type
+   * comes from the user's choice rather than from a throw statement in the source.
+   *
+   * @param payload the command arguments: {@code uri}, {@code range}, {@code exceptionTypeId},
+   *     {@code simulated} and {@code options}.
+   * @param monitor progress and cancellation for the analysis.
+   * @return a FlowResult map; an empty one with a diagnostic when the unit or the exception type
+   *     cannot be resolved.
+   * @throws JavaModelException if the exception type cannot be looked up on the classpath.
+   */
   private Object analyzeFlow(Map<String, Object> payload, IProgressMonitor monitor)
       throws JavaModelException {
     ICompilationUnit unit = unit(payload);
@@ -150,6 +187,14 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
 
   // -------------------------------------------------------------- helpers
 
+  /**
+   * Whether {@code type} is {@code throwable} or one of its subtypes.
+   *
+   * @param type the candidate type.
+   * @param throwable {@code java.lang.Throwable} as resolved in the project.
+   * @param monitor progress and cancellation for the supertype hierarchy.
+   * @return true for a throwable type; false as well when the hierarchy cannot be computed.
+   */
   private static boolean isThrowable(IType type, IType throwable, IProgressMonitor monitor) {
     try {
       ITypeHierarchy h = type.newSupertypeHierarchy(monitor);
@@ -164,6 +209,12 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
     }
   }
 
+  /**
+   * An ExceptionTypeRef for a Java model type, which unlike a binding cannot be classified cheaply.
+   *
+   * @param type the exception type to describe.
+   * @return a JSON-ready ExceptionTypeRef map with kind {@code unknown}.
+   */
   private static Map<String, Object> typeRef(IType type) {
     Map<String, Object> out = new LinkedHashMap<>();
     out.put("id", type.getFullyQualifiedName());
@@ -172,6 +223,15 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
     return out;
   }
 
+  /**
+   * Binding for a type looked up by name, as needed for subtype checks against catch clauses.
+   *
+   * @param project the project whose classpath is searched.
+   * @param fqn the fully-qualified type name.
+   * @param monitor progress and cancellation for binding creation.
+   * @return the binding, or {@code null} when either argument is null or the type is not found.
+   * @throws JavaModelException if the project's classpath cannot be searched.
+   */
   private static ITypeBinding resolveTypeBinding(
       IJavaProject project, String fqn, IProgressMonitor monitor) throws JavaModelException {
     if (project == null || fqn == null) {
@@ -189,11 +249,23 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
         : null;
   }
 
+  /**
+   * The compilation unit named by the payload's {@code uri}.
+   *
+   * @param payload the command arguments.
+   * @return the unit, or {@code null} when the URI is missing or not in the workspace.
+   */
   private static ICompilationUnit unit(Map<String, Object> payload) {
     String uri = string(payload.get("uri"));
     return uri == null ? null : JDTUtils.resolveCompilationUnit(uri);
   }
 
+  /**
+   * A FlowResult with no paths, explaining why the analysis could not start.
+   *
+   * @param diagnostic the reason shown to the user.
+   * @return a JSON-ready FlowResult map.
+   */
   private static Map<String, Object> empty(String diagnostic) {
     Map<String, Object> out = new LinkedHashMap<>();
     out.put("paths", List.of());
@@ -203,6 +275,12 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
     return out;
   }
 
+  /**
+   * The payload object; every CatchMe command takes exactly one argument.
+   *
+   * @param arguments the raw command arguments.
+   * @return the first argument, or an empty map when there is none.
+   */
   @SuppressWarnings("unchecked")
   private static Map<String, Object> firstMap(List<Object> arguments) {
     return arguments == null || arguments.isEmpty()
@@ -210,15 +288,35 @@ public class CatchMeDelegateCommandHandler implements IDelegateCommandHandler {
         : (Map<String, Object>) arguments.get(0);
   }
 
+  /**
+   * A nested JSON object, tolerating absent or mistyped values.
+   *
+   * @param value a value from the payload.
+   * @return {@code value} as a map, or an empty map when it is not one.
+   */
   @SuppressWarnings("unchecked")
   private static Map<String, Object> map(Object value) {
     return value instanceof Map ? (Map<String, Object>) value : Map.of();
   }
 
+  /**
+   * A JSON string, tolerating absent or mistyped values.
+   *
+   * @param value a value from the payload.
+   * @return {@code value} as a string, or {@code null} when it is not one.
+   */
   private static String string(Object value) {
     return value instanceof String ? (String) value : null;
   }
 
+  /**
+   * A JSON number, tolerating absent or mistyped values. The decoder chooses the {@link Number}
+   * subtype, so any is accepted.
+   *
+   * @param map the JSON object to read from.
+   * @param key the member name.
+   * @return the value as an int, or 0 when it is missing or not a number.
+   */
   private static int intAt(Map<String, Object> map, String key) {
     Object v = map.get(key);
     return v instanceof Number ? ((Number) v).intValue() : 0;

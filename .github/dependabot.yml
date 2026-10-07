@@ -58,6 +58,16 @@ updates:
       interval: "daily"
     cooldown:
       default-days: 7
+    ignore:
+      # FIXME: revisit on 2027-01-07. Holds the Maven wrapper at 3.9.x: Maven
+      # 3.10 ships Resolver 2, which rejects classifiers containing '/', and
+      # Tycho 5.0.4 maps jars nested in bundles (org.apache.ant's lib/ant.jar
+      # and friends) to such classifiers, so the build fails before any mojo
+      # runs. Remove once a Tycho release fixes it and the wrapper has moved
+      # to 3.10 (see server-java/.mvn/wrapper/maven-wrapper.properties and
+      # TODO.md).
+      - dependency-name: "org.apache.maven:apache-maven"
+        versions: [">= 3.10.0"]
     commit-message:
       prefix: build(deps)
       prefix-development: chore(dev-deps)
