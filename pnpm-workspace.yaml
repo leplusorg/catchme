@@ -5,7 +5,7 @@ packages:
 # Both postinstall scripts copy the platform binary out of a lockfile-pinned
 # optional dependency (@esbuild/<platform>, @vscode/vsce-sign-<platform>).
 allowBuilds:
-  '@vscode/vsce-sign': true
+  "@vscode/vsce-sign": true
   esbuild: true
 
 # FIXME: revisit on 2027-01-04. These overrides force patched versions of
@@ -27,8 +27,8 @@ allowBuilds:
 # Remove it together with the serialize-javascript one (mocha 12 depends on diff
 # ^9.0.0).
 overrides:
-  'brace-expansion@<1.1.21': ^1.1.21
-  'brace-expansion@>=2.0.0 <2.1.7': ^2.1.7
-  'brace-expansion@>=3.0.0 <5.0.12': ^5.0.12
-  'serialize-javascript@<7.0.5': ^7.1.2
-  'diff@>=6.0.0 <8.0.3': ^8.0.3
+  "brace-expansion@<1.1.21": ^1.1.21
+  "brace-expansion@>=2.0.0 <2.1.7": ^2.1.7
+  "brace-expansion@>=3.0.0 <5.0.12": ^5.0.12
+  "serialize-javascript@<7.0.5": ^7.1.2
+  "diff@>=6.0.0 <8.0.3": ^8.0.3

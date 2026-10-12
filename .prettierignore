@@ -1,0 +1,4 @@
+# Written by pnpm in its own style on every install, so a Prettier reformat
+# would be undone by the next one. Super-linter excludes it too, through
+# FILTER_REGEX_EXCLUDE in .github/workflows/super-linter.yml.
+pnpm-lock.yaml

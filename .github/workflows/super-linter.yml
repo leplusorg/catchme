@@ -69,6 +69,10 @@ jobs:
           DEFAULT_BRANCH: main
           ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
           ENFORCE_COMMITLINT_CONFIGURATION_CHECK: true
+          # pnpm rewrites the lockfile in its own style on every install,
+          # Dependabot's included, so Prettier's would never stick.
+          # .prettierignore does the same for local Prettier runs.
+          FILTER_REGEX_EXCLUDE: "(pnpm-lock\\.yaml)$"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTIONS_ZIZMOR_CONFIG_FILE: .zizmor.yml
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
