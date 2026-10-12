@@ -353,8 +353,8 @@ public final class ExceptionFlowAnalyzer {
   // -------------------------------------------------------- interprocedural
 
   /**
-   * Every source reference to {@code method}, found with the JDT search engine. Callers in
-   * binaries are skipped since there is no source to continue the walk in.
+   * Every source reference to {@code method}, found with the JDT search engine. Callers in binaries
+   * are skipped since there is no source to continue the walk in.
    *
    * @param method the method the exception escapes from.
    * @param diagnostics where a failed search is reported.
@@ -371,8 +371,7 @@ public final class ExceptionFlowAnalyzer {
     }
     List<CallSite> out = new ArrayList<>();
     try {
-      SearchPattern pattern =
-          SearchPattern.createPattern(element, IJavaSearchConstants.REFERENCES);
+      SearchPattern pattern = SearchPattern.createPattern(element, IJavaSearchConstants.REFERENCES);
       if (pattern == null) {
         return List.of();
       }
@@ -588,8 +587,8 @@ public final class ExceptionFlowAnalyzer {
     }
 
     /**
-     * Identity for the visited set. The length is left out: two references in one unit cannot
-     * start at the same offset.
+     * Identity for the visited set. The length is left out: two references in one unit cannot start
+     * at the same offset.
      *
      * @return a key identifying this call site across parses.
      */
