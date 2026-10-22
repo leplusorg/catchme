@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "26.6.4",
-    "turbo": "2.11.7",
+    "turbo": "2.11.8",
     "typescript": "^7.0.2"
   }
 }
