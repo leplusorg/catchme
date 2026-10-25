@@ -24,8 +24,8 @@
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "devDependencies": {
-    "@types/vscode": "1.105.0",
-    "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "@types/vscode": "1.140.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
   }
 }

@@ -32,8 +32,8 @@
     "site": "pnpm --filter @leplusorg/catchme-site run serve"
   },
   "devDependencies": {
-    "@types/node": "26.6.4",
-    "turbo": "2.11.8",
-    "typescript": "^7.0.2"
+    "@types/node": "26.6.5",
+    "turbo": "2.11.9",
+    "typescript": "7.0.2"
   }
 }
